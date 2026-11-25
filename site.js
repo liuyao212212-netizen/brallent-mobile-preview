@@ -347,6 +347,10 @@ function installGallery(galleries) {
   stage.className = 'viewer-stage';
   stage.append(photo);
   close.classList.add('viewer-close');bar.append(prev,caption,next);viewer.append(close,stage,bar);document.body.append(viewer);
+  const inquiry=document.createElement('a');
+  inquiry.href='index.html?service=apparel#contactForm';inquiry.textContent='咨询服装定制';
+  inquiry.className='viewer-inquiry';inquiry.hidden=true;bar.append(inquiry);
+  inquiry.addEventListener('click',()=>viewer.close());
   let items=[],at=0,paired=false;
   function display(index) {
     const count = paired ? items.length * 2 : items.length;
@@ -357,6 +361,9 @@ function installGallery(galleries) {
     viewer.classList.toggle('design-viewer', paired);
     stage.classList.toggle('back-view', paired && at % 2 === 1);
     viewer.classList.toggle('rack-viewer', Boolean(figure.closest('.rack')));
+    const anonymous=Boolean(figure.closest('.studio-rack'));
+    caption.hidden=anonymous;
+    inquiry.hidden=!anonymous;
     photo.src = source.currentSrc || source.src;
     photo.alt = source.alt + side;
     const name = figure.querySelector('figcaption').textContent + side;
@@ -468,8 +475,7 @@ function installRack(rack) {
   rack.classList.add('rack-ready');
   requestAnimationFrame(() => requestAnimationFrame(() => rack.classList.add('rack-interactive')));
 }
-const showroomRack = document.querySelector('.rack');
-if (showroomRack) installRack(showroomRack);
+document.querySelectorAll('.rack').forEach(installRack);
 
 const lookCards = document.querySelectorAll('.look-card');
 if (lookCards.length && 'IntersectionObserver' in window) {
