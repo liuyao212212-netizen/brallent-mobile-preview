@@ -11,22 +11,28 @@ const mix = (a,b,t) => a+(b-a)*t;
 const between = (a,b,t) => [mix(a[0],b[0],t),mix(a[1],b[1],t)];
 
 function poseAt(time) {
-  const t=time%7;
-  const reset=1-ease(t,5.65,7);
+  const t=time%10;
+  const reset=1-ease(t,8.8,9.95);
   const offer=ease(t,-.18,1.30)*reset;
   const catchSheet=ease(t,.28,1.30)*reset;
   const take=ease(t,1.58,2.65)*reset;
   const release=ease(t,1.62,2.48)*reset;
   const look=ease(t,2.48,3.55)*reset;
   const point=ease(t,2.70,3.65)*reset;
+  // Each reply begins while the preceding participant is finishing their gesture.
+  const trace=ease(t,2.85,4.55)*(1-ease(t,5.15,5.95));
+  const adjust=ease(t,4.35,5.7)*(1-ease(t,7.75,8.75));
+  const approve=ease(t,6.22,6.94)*(1-ease(t,8.25,9.1));
+  const nod=Math.sin(Math.PI*ease(t,6.75,7.55));
   return {
+    trace,adjust,approve,nod,
     t,offer,catchSheet,take,release,look,point,
     sheetX:536+96*offer+56*take,
     sheetY:653-15*offer+49*take,
     angle:-.13+.16*offer+.07*take,
     tilt:1-.26*look,
     lightToModel:ease(t,2.25,3.62),
-    glow:ease(t,3.4,3.95)*(1-ease(t,5.25,6.15))
+    glow:ease(t,3.15,3.7)*(1-ease(t,8.35,9.15))
   };
 }
 
@@ -56,7 +62,7 @@ function drawHandoff(ctx,art,p) {
   const cos=Math.cos(p.angle),sin=Math.sin(p.angle);
   const attached=(x,y)=>[p.sheetX+x*cos-y*p.tilt*sin,p.sheetY+x*sin+y*p.tilt*cos];
   const left=between(attached(-107,-2),[476+39*p.point,657+59*p.point],p.release);
-  const leftBack=between(attached(-82,-47),[538,631],p.release);
+  const leftBack=between(attached(-82,-47),[538+47*p.trace,631+19*p.trace],p.release);
   const right=between([843,706],attached(118,28),p.catchSheet);
   const rightBack=between([846,656],attached(100,-44),p.catchSheet);
   sleeve(ctx,[527,599],[550,611],leftBack);
@@ -110,6 +116,66 @@ function drawSignal(ctx,p) {
   ctx.restore();
 }
 
+// Lines are drawn in the same perspective as the two actual models on the glass table.
+function reviewModel(ctx,p) {
+  ctx.save();
+  ctx.lineJoin='round';ctx.lineCap='round';
+  function stroke(points,color,width=2) {
+    ctx.beginPath();ctx.moveTo(...points[0]);
+    for(const point of points.slice(1))ctx.lineTo(...point);
+    ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();
+  }
+  function contact(x,y,r,amount) {
+    if(amount<=0)return;
+    ctx.save();ctx.globalAlpha=amount;ctx.shadowColor='#68e8ff';ctx.shadowBlur=7;
+    ctx.beginPath();ctx.ellipse(x,y,r,r*.38,-.08,0,Math.PI*2);
+    ctx.strokeStyle='#b6f8ff';ctx.lineWidth=2.4;ctx.stroke();
+    ctx.restore();
+  }
+
+  // Left reviewer slides a guide across the plan; the opposite hand catches its endpoint.
+  const slide=ease(p.t,3.2,4.65);
+  const palm=between([280,1054],[333,1061],p.trace);
+  const seam=between([395,1072],[608,1045],slide);
+  ctx.globalAlpha=ease(p.t,2.9,3.25)*(1-ease(p.t,5.55,6.1));
+  stroke([palm,[359,1080],[395,1072],seam],'#7ae3f4',3);
+  contact(...seam,12,1);
+  ctx.globalAlpha=1;
+  const finger=[636-27*p.point-20*p.adjust,1044+11*p.point+10*p.adjust];
+  contact(...finger,9+11*p.adjust,p.adjust);
+
+  // The adjustment lifts three curved floor plates out of the blueprint, then seats them.
+  const rise=ease(p.t,4.65,5.75);
+  const settle=ease(p.t,6.04,6.8);
+  const opacity=ease(p.t,4.38,4.85)*(1-ease(p.t,8.1,8.78));
+  const lift=rise*(1-.75*settle);
+  ctx.globalAlpha=opacity;
+  for(let level=0;level<3;level++){
+    const y=1042-level*8-(level+1)*13*lift;
+    ctx.beginPath();ctx.moveTo(412,y+8);
+    ctx.bezierCurveTo(393,y-2,419,y-14,449,y-15);
+    ctx.lineTo(508,y-19);ctx.lineTo(541,y-10);ctx.lineTo(523,y+1);
+    ctx.quadraticCurveTo(453,y+17,412,y+8);
+    ctx.fillStyle=level===2?'rgba(118,232,255,.42)':'rgba(38,154,206,.31)';
+    ctx.fill();ctx.strokeStyle='#c8f6ff';ctx.lineWidth=2;ctx.stroke();
+    stroke([[415,y+9],[415,y+15],[450,y+19],[522,y+7],[522,y+1]],'#67dbf4',1.7);
+  }
+  // A warm confirmation travels to the physical model; its windows light bay by bay.
+  const transfer=ease(p.t,6.35,7.46);
+  ctx.globalAlpha=ease(p.t,6.3,6.65)*(1-ease(p.t,8.55,9));
+  const bridge=[[535,1066],[645,1101],[745,1117],[837,1145],[903,1158]];
+  const count=transfer*(bridge.length-1),seg=Math.min(bridge.length-2,Math.floor(count));
+  const tip=between(bridge[seg],bridge[seg+1],count-seg);
+  stroke([...bridge.slice(0,seg+1),tip],'#f9d393',2.6);contact(...tip,7,1);
+  for(let bay=0;bay<8;bay++){
+    const on=ease(p.t,7.21+bay*.085,7.55+bay*.085)*(1-ease(p.t,8.62,9.22));
+    ctx.globalAlpha=on*.72;ctx.shadowColor='#ffc57b';ctx.shadowBlur=6;
+    const x=849+bay*9,y=1161+Math.sin(bay*.45)*3;
+    stroke([[x,y],[x,y+11]],'#ffdd9f',3);
+  }
+  ctx.restore();
+}
+
 async function startAtrium(stage) {
   const art=stage.querySelector('img');
   const plate=new Image();
@@ -122,13 +188,14 @@ async function startAtrium(stage) {
   let viewWidth=0,viewHeight=0,scale=1,originX=0,originY=0;
   let pointerX=0,pointerY=0,panX=0,panY=0;
   function render(t) {
-    const p=poseAt(t),a=t*Math.PI*2/7;
+    const p=poseAt(t),a=t*Math.PI*2/10;
     const motion=[
-      [12*p.offer+5*p.look,16*p.look,.13*p.look-.045*p.offer],
+      [12*p.offer+5*p.look,16*p.look+6*p.nod,.13*p.look-.045*p.offer],
       [-16*p.catchSheet-7*p.look,20*p.look,-.16*p.look+.06*p.catchSheet],
-      [-19*p.point,11*p.point,0],[5*p.point,7*p.look,-.045*p.look],
-      [7*p.look,9*p.look,.06*p.look],[3*Math.sin(a),2*Math.cos(a),0],
-      [4*Math.sin(a+.3),2*Math.cos(a),0],[-3*Math.sin(a),2*Math.cos(a),0]
+      [-19*p.point-20*p.adjust,11*p.point+10*p.adjust,-.05*p.adjust],[5*p.point-9*p.adjust,7*p.look+11*p.nod,-.045*p.look-.045*p.adjust],
+      [7*p.look+11*p.trace,9*p.look+9*p.nod,.06*p.look+.06*p.trace],[3*Math.sin(a)+5*p.approve,2*Math.cos(a)+5*p.nod,0],
+      [4*Math.sin(a+.3),2*Math.cos(a),0],[-3*Math.sin(a),2*Math.cos(a)+7*p.nod,-.05*p.approve],
+      [54*p.trace,8*p.trace,-.09*p.trace],[13*p.approve,-12*p.approve,-.08*p.approve]
     ];
     panX+=(pointerX-panX)*.08;panY+=(pointerY-panY)*.08;
     const x=originX+(surface?panX*3*scale:0),y=originY+(surface?panY*2*scale:0);
@@ -137,7 +204,7 @@ async function startAtrium(stage) {
     const px=light.width/viewWidth,py=light.height/viewHeight;
     brush.setTransform(px*scale,0,0,py*scale,px*x,py*y);
     if(!surface)brush.drawImage(plate,0,0,W,H);
-    drawHandoff(brush,art,p);drawSignal(brush,p);
+    drawHandoff(brush,art,p);drawSignal(brush,p);reviewModel(brush,p);
     stage.classList.toggle('motion-ready',Boolean(surface));
   }
   function tick(now) {
@@ -192,7 +259,8 @@ function makeSurface(canvas,image,width,height) {
   const zones=[
     [481,541,120,115],[879,609,133,130],[650,1007,88,95],
     [894,863,177,132],[311,842,170,168],[226,528,86,84],
-    [724,455,52,54],[861,393,72,78]
+    [724,455,52,54],[861,393,72,78],
+    [260,1016,95,67],[501,950,73,61]
   ];
   const cols=64,rows=82,n=(cols+1)*(rows+1);
   const rest=new Float32Array(n*2),uv=new Float32Array(n*2),positions=new Float32Array(n*2);
