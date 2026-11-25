@@ -503,3 +503,23 @@
   .look-photos { grid-template-columns:2.9fr 1fr; }
 }
 @media(prefers-reduced-motion:reduce) { .rack-ready .rack-pieces { translate:none; } }
+
+/* The customer samples hang as mounted studio photographs on the existing rail. */
+.rack-ready .rack-sample { top:12%; height:78%; }
+.rack-ready .rack-sample .photo-open {
+  padding:clamp(4px,.6vw,9px); border:1px solid #c8cdca; border-radius:2px;
+  background:#f9f9f6; box-shadow:0 9px 19px -10px #2e494d60;
+}
+.rack-ready .rack-sample img { object-fit:contain; object-position:center; background:#f5f4ef; }
+.rack-ready .rack-sample::before {
+  content:""; position:absolute; left:calc(50% - 9px); top:-6px; width:18px; height:10px;
+  z-index:1; pointer-events:none; border-radius:2px;
+  background:linear-gradient(#647477,#d7e1df 55%,#68797a);
+}
+.rack-ready .rack-piece[hidden] { display:none; }
+.rack-choices { grid-template-columns:repeat(auto-fit,minmax(125px,1fr)); }
+.rack-choices button { padding:8px 4px; white-space:normal; line-height:1.4; }
+@media(max-width:680px) {
+  .rack-choices { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .rack-choices button { font-size:13px; }
+}

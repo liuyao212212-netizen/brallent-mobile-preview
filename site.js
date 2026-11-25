@@ -393,7 +393,10 @@ function installRack(rack) {
     current = (index + pieces.length) % pieces.length;
     pieces.forEach((piece, i) => {
       const selected = i === current;
-      piece.dataset.slot = (i - current + pieces.length) % pieces.length;
+      const offset = (i - current + pieces.length) % pieces.length;
+      const slot = offset === pieces.length - 1 ? 3 : offset;
+      piece.hidden = offset > 2 && offset !== pieces.length - 1;
+      piece.dataset.slot = slot;
       const open = piece.querySelector('button');
       open.tabIndex = selected ? 0 : -1;
       const name = choices[i].textContent;
