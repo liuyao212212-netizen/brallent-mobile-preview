@@ -64,7 +64,7 @@
     ctx.fillStyle=strip;ctx.fillRect(0,195,390,47);
     ctx.fillStyle='rgb('+[r,g,b]+')';ctx.fillRect(15,205,2,26);
     ctx.textAlign='left';ctx.textBaseline='middle';
-    ctx.font='600 12px system-ui,sans-serif';ctx.fillText(action.dataset.role+'  ·  '+scene.dataset.document,25,207);
+    ctx.font='600 12px system-ui,sans-serif';ctx.fillText(scene.dataset.document,25,207);
     ctx.fillStyle='#fff';ctx.font='600 15px system-ui,sans-serif';ctx.fillText(action.dataset.line,25,227);
   }
   for(const image of stills) image.addEventListener('load',schedule);
