@@ -476,6 +476,10 @@
 .look-photos img { width:100%; aspect-ratio:1; object-fit:cover; }
 .look-photos figcaption { margin-top:6px; color:#445d65; font-size:13px; }
 .look-photos .photo-open { border-radius:2px; }
+.look-photos figure:first-child img { object-fit:contain; background:#081126; }
+.fabric-detail { position:relative; aspect-ratio:1; overflow:hidden; }
+.viewer-stage.fabric-detail { width:min(100%,65svh); margin:auto; }
+.fabric-detail img { position:absolute; top:50%; left:50%; width:305%; max-width:none; height:auto; aspect-ratio:auto; transform:var(--detail-offset); }
 .look-caption { display:flex; align-items:end; justify-content:space-between; gap:12px; border-bottom:1px solid #bbcacc; padding:15px 0; }
 .look-caption h3 { font-size:clamp(20px,2vw,30px); font-weight:580; margin-top:3px; }
 .look-caption a,.apparel-case-link { display:inline-flex; align-items:center; min-height:44px; color:#1b5963; font-size:14px; }

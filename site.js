@@ -360,6 +360,8 @@ function installGallery(galleries) {
     const side = paired ? (at % 2 ? ' · 背面' : ' · 正面') : '';
     viewer.classList.toggle('design-viewer', paired);
     stage.classList.toggle('back-view', paired && at % 2 === 1);
+    stage.classList.toggle('fabric-detail', Boolean(figure.dataset.focus));
+    stage.style.setProperty('--detail-offset', figure.style.getPropertyValue('--detail-offset'));
     viewer.classList.toggle('rack-viewer', Boolean(figure.closest('.rack')));
     const anonymous=Boolean(figure.closest('.studio-rack'));
     caption.hidden=anonymous;
@@ -376,6 +378,11 @@ function installGallery(galleries) {
       const opener=document.createElement('button');opener.type='button';opener.className='photo-open';
       opener.setAttribute('aria-label','放大查看'+source.alt);opener.setAttribute('aria-haspopup','dialog');
       source.before(opener);opener.append(source);
+      if (figure.dataset.focus) {
+        const [x, y] = figure.dataset.focus.split(' ');
+        figure.style.setProperty('--detail-offset', `translate(-${x}, -${y})`);
+        opener.classList.add('fabric-detail');
+      }
       opener.onclick=()=>{items=figures;paired=Boolean(gallery.closest('#design-references'));display(paired ? index * 2 : index);viewer.showModal();close.focus();};
     });
   });
