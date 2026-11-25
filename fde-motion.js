@@ -1,7 +1,12 @@
-// Original process schematics. Coordinates share a fixed view so the three captions
-// stay aligned at every viewport size. Only visible schematics request frames.
+// The native scroll position controls the geometry of one stationary light field.
 (() => {
-  const figures = [...document.querySelectorAll('.fde-signal')];
+  const viewport = document.querySelector('.fde-stage-viewport');
+  if (!viewport) return;
+  const deck = viewport.querySelector('.fde-stage-deck');
+  const firstFigure = deck.querySelector('.fde-stars');
+  const canvas = viewport.querySelector('.fde-shared-sky');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   // Each surface is sampled as fine luminous filaments. All scenes share the
   // same camera, so switching steps feels like exploring one space.
@@ -11,8 +16,20 @@
     ['#679dfe','#6df0d7','#e2fffb'], ['#80ddec','#c69eff','#fff2d3'],
     ['#74b1ff','#a998ff','#9ff2e0']
   ];
-  function paintStars(ctx, stage, phase) {
-    const [blue,lilac,white] = palettes[stage-1];
+  function mix(a,b,t) { return a+(b-a)*t; }
+  function mixColor(a,b,t) {
+    if (!t) return a;
+    const channels = [1,3,5].map(i => Math.round(mix(
+      parseInt(a.slice(i,i+2),16),parseInt(b.slice(i,i+2),16),t
+    )).toString(16).padStart(2,'0'));
+    return '#' + channels.join('');
+  }
+  function paintStars(position,phase) {
+    const index=Math.floor(position);
+    const next=Math.min(index+1,palettes.length-1);
+    const fraction=position-index;
+    const blend=fraction*fraction*(3-2*fraction);
+    const [blue,lilac,white]=palettes[index].map((c,i)=>mixColor(c,palettes[next][i],blend));
     const theta = phase * turn;
     const {sin,cos,exp} = Math;
     ctx.clearRect(0,0,390,206);
@@ -30,7 +47,7 @@
       ctx.fillRect(x,y,n%8?.85:1.65,n%8?.85:1.65);
     }
     ctx.globalAlpha=1;
-    function project(u,v) {
+    function shape(stage,u,v) {
       const a=u*turn, b=v*turn;
       if(stage===1) {
         // Dispersed signals are swept through one diagnostic focus.
@@ -52,6 +69,12 @@
       const radius=86+19*cos(b);
       return [195+radius*cos(a)+13*sin(a),101+.45*radius*sin(a)-20*sin(b)+15*cos(a+.4*sin(theta))];
     }
+    function project(u,v) {
+      const start=shape(index+1,u,v);
+      if (!blend) return start;
+      const end=shape(next+1,u,v);
+      return [mix(start[0],end[0],blend),mix(start[1],end[1],blend)];
+    }
     ctx.save();
     ctx.globalCompositeOperation='lighter';
     for(let j=0;j<40;j++) {
@@ -69,72 +92,67 @@
       ctx.fillStyle=j%5?white:blue;
       ctx.beginPath();ctx.arc(x,y,j%5?.8:1.65,0,turn);ctx.fill();
     }
-    const u=stage===1?.58:phase;
+    const sweep=(1-cos(theta))/2;
+    const u=mix(index===0?.58:sweep,next===0?.58:sweep,blend);
     const [x,y]=project(u,.45);
     halo(x,y,18,white+'ac');
     ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,2.1,0,turn);ctx.fill();
     ctx.restore();
   }
 
-  const visible = new Set();
-  const contexts = new Map();
-  const observer = new IntersectionObserver(entries=>{
-    for (const entry of entries) {
-      if (entry.isIntersecting) visible.add(entry.target);
-      else visible.delete(entry.target);
-    }
-    schedule();
-  },{threshold:.1});
-  let frame=0, last=0;
-  function draw(figure,t) {
-    const ctx=contexts.get(figure);
-    const canvas=ctx.canvas;
-    const width=Math.round(figure.clientWidth*Math.min(devicePixelRatio,2));
-    if (!width) return;
-    const stage=Number(figure.dataset.stage);
-    const frameHeight=206;
-    const height=Math.round(width*frameHeight/390);
-    if(canvas.width!==width || canvas.height!==height) {
-      canvas.width=width;canvas.height=height;
-    }
-    ctx.setTransform(width/390,0,0,height/frameHeight,0,0);
-    paintStars(ctx,stage,t);
-  }
-  function schedule() {
-    cancelAnimationFrame(frame);
-    if (motion.matches || document.hidden || !visible.size) return;
-    frame=requestAnimationFrame(animate);
-  }
-  function animate(now) {
-    if(now-last>=40) {
-      visible.forEach(figure=>draw(figure,(now%4400)/4400));
+
+  let stride=0, visible=false, frame=0, last=0, lastPosition=-1;
+  function render(now) {
+    frame=0;
+    if (!visible || document.hidden || !stride) return;
+    const raw=Math.max(0, Math.min(palettes.length-1,deck.scrollLeft/stride));
+    const position=motion.matches ? Math.round(raw) : raw;
+    // Track each scroll frame; idle twinkling can run at a lower frame rate.
+    if(position!==lastPosition || now-last>=40) {
+      paintStars(position,motion.matches ? .42 : (now%4400)/4400);
+      lastPosition=position;
       last=now;
     }
-    frame=requestAnimationFrame(animate);
+    if (!motion.matches) schedule();
   }
-  const resize=new ResizeObserver(entries=>entries.forEach(e=>draw(e.target,.42)));
-  figures.forEach(figure=>{
-    const ctx=figure.querySelector('canvas').getContext('2d');
-    if(!ctx) return;
-    contexts.set(figure,ctx);
-    figure.classList.add('drawn');
-    resize.observe(figure);observer.observe(figure);
-    function spotlight(event) {
-      if(motion.matches) return;
-      const rect=figure.getBoundingClientRect();
-      figure.style.setProperty('--light-x', (event.clientX-rect.left)+'px');
-      figure.style.setProperty('--light-y', (event.clientY-rect.top)+'px');
-    }
-    function release() {
-      figure.style.removeProperty('--light-x');figure.style.removeProperty('--light-y');
-    }
-    figure.addEventListener('pointerdown',spotlight,{passive:true});
-    figure.addEventListener('pointermove',spotlight,{passive:true});
-    for(const event of ['pointerleave','pointercancel','pointerup']) figure.addEventListener(event,release);
-  });
-  document.addEventListener('visibilitychange',schedule);
-  motion.addEventListener('change',()=>{
-    if(motion.matches) contexts.forEach((_,figure)=>draw(figure,.42));
+  function schedule() {
+    if (visible && !document.hidden && !frame) frame=requestAnimationFrame(render);
+  }
+  function resize() {
+    const width=firstFigure.getBoundingClientRect().width;
+    if (!width) return;
+    stride=deck.children[1].getBoundingClientRect().left - deck.children[0].getBoundingClientRect().left;
+    viewport.style.setProperty('--sky-width',width+'px');
+    canvas.width=Math.round(width*Math.min(devicePixelRatio,2));
+    canvas.height=Math.round(canvas.width*206/390);
+    ctx.setTransform(canvas.width/390,0,0,canvas.height/206,0,0);
+    lastPosition=-1;
     schedule();
-  });
+  }
+  viewport.classList.add('with-sky');
+  canvas.hidden=false;
+  new ResizeObserver(resize).observe(firstFigure);
+  new IntersectionObserver(([entry])=>{
+    visible=entry.isIntersecting;
+    schedule();
+  }).observe(canvas);
+  deck.addEventListener('scroll',schedule,{passive:true});
+  document.addEventListener('visibilitychange',schedule);
+  motion.addEventListener('change',()=>{lastPosition=-1;schedule();});
+
+  function spotlight(event) {
+    if (motion.matches) return;
+    const rect=canvas.getBoundingClientRect();
+    if(event.clientY<rect.top || event.clientY>rect.bottom || event.clientX>rect.right) {
+      release();return;
+    }
+    viewport.style.setProperty('--light-x',(event.clientX-rect.left)+'px');
+    viewport.style.setProperty('--light-y',(event.clientY-rect.top)+'px');
+  }
+  function release() {
+    viewport.style.removeProperty('--light-x');viewport.style.removeProperty('--light-y');
+  }
+  deck.addEventListener('pointerdown',spotlight,{passive:true});
+  deck.addEventListener('pointermove',spotlight,{passive:true});
+  for(const event of ['pointerleave','pointercancel','pointerup']) deck.addEventListener(event,release);
 })();
