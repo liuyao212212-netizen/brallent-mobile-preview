@@ -565,3 +565,46 @@ function installResultCounters() {
   reducedMotion.addEventListener('change', configure);
 }
 installResultCounters();
+
+function installFdeJourney(journey) {
+  const nav = journey.querySelector('.fde-stage-nav');
+  const buttons = [...nav.querySelectorAll('button')];
+  const deck = journey.querySelector('.fde-stage-deck');
+  const slides = [...deck.children];
+  let current = -1;
+
+  function showPosition() {
+    const left = deck.getBoundingClientRect().left;
+    const distance = slide => Math.abs(slide.getBoundingClientRect().left - left);
+    const nearest = slides.reduce((a, b) => distance(a) <= distance(b) ? a : b);
+    const index = slides.indexOf(nearest);
+    if (index === current) return;
+    current = index;
+    buttons.forEach((button, i) => {
+      if (index === i) button.setAttribute('aria-current', 'step');
+      else button.removeAttribute('aria-current');
+    });
+    nav.style.setProperty('--progress', index / (slides.length - 1));
+  }
+  function go(index) {
+    const offset = slides[index].getBoundingClientRect().left - deck.getBoundingClientRect().left;
+    deck.scrollTo({left:deck.scrollLeft + offset, behavior:reducedMotion.matches ? 'instant' : 'smooth'});
+  }
+  buttons.forEach((button, i) => {
+    button.addEventListener('click', () => go(i));
+    button.addEventListener('keydown', event => {
+      const targets = {ArrowLeft:Math.max(0,i-1), ArrowRight:Math.min(buttons.length-1,i+1), Home:0, End:buttons.length-1};
+      if (!(event.key in targets)) return;
+      event.preventDefault();
+      buttons[targets[event.key]].focus({preventScroll:true});
+      go(targets[event.key]);
+    });
+  });
+  journey.classList.add('ready');
+  nav.hidden = false;
+  deck.addEventListener('scroll', showPosition, {passive:true});
+  window.addEventListener('resize', showPosition);
+  showPosition();
+}
+const fdeJourney = document.querySelector('.fde-journey');
+if (fdeJourney) installFdeJourney(fdeJourney);
