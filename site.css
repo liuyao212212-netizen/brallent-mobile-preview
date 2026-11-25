@@ -705,7 +705,6 @@
 @keyframes stage-glint { 50% { transform:translateX(60%); } }
 @media(prefers-reduced-motion:no-preference) { .fde-stage-nav [aria-current]::after { animation:stage-glint 4s ease-in-out infinite; } }
 @media(max-width:680px) { .fde-stage-copy { border-left:0; border-top:1px solid #a7c2e02b; } }
-.fde-process-link { display:inline-flex; align-items:center; min-height:44px; margin-top:8px; color:#114f72; font-weight:600; }
 
 .field-brief { border:1px solid #c9d9df; border-radius:16px; padding:clamp(18px,3vw,32px); background:#f5f9fa; }
 .field-brief h3 { font-size:clamp(20px,2.2vw,29px); line-height:1.4; margin-bottom:10px; }
@@ -894,7 +893,6 @@
 @media(prefers-reduced-motion:no-preference){ .folio .outcome-art { transform:perspective(850px) rotateY(calc(var(--page-angle,0deg) * .3)) scale(1.015); } }
 
 /* A task is the entry point to the digital team. Each choice opens its own work sample. */
-.fde-shortcuts {display:flex; flex-wrap:wrap; gap:8px 24px}
 .team-overview {background:#f2f5fa; margin:0}
 .team-overview .wrap {max-width:1024px}
 .team-overview h2 {text-align:left; text-wrap:balance; margin-bottom:12px}
