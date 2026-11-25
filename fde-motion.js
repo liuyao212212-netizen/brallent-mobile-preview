@@ -165,36 +165,49 @@
   }));
   // Lock only horizontal drags. Vertical gestures stay with the page.
   let drag=null;
-  track.addEventListener('pointerdown',event=>{
-    if (!phone.matches || !event.isPrimary || event.button!==0) return;
-    drag={id:event.pointerId,x:event.clientX,y:event.clientY,left:track.scrollLeft,active:false};
-  });
-  track.addEventListener('pointermove',event=>{
-    if (!drag || drag.id!==event.pointerId) return;
-    const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
+  function begin(x,y) {
+    if (phone.matches) drag={x,y,left:track.scrollLeft,active:false};
+  }
+  function move(x,y) {
+    if (!drag) return false;
+    const dx=x-drag.x,dy=y-drag.y;
     if (!drag.active) {
-      if (Math.max(Math.abs(dx),Math.abs(dy))<7) return;
-      if (Math.abs(dy)>=Math.abs(dx)) {drag=null;return;}
-      drag.active=true;
-      track.classList.add('turning');
-      track.setPointerCapture(event.pointerId);
+      if (Math.max(Math.abs(dx),Math.abs(dy))<6) return false;
+      if (Math.abs(dy)>=Math.abs(dx)) {drag=null;return false;}
+      drag.active=true;track.classList.add('turning');
     }
     track.scrollLeft=drag.left-dx;
-  });
-  function finishDrag(event) {
-    if (!drag || drag.id!==event.pointerId) return;
+    return true;
+  }
+  function finish(cancelled) {
     const gesture=drag;
     drag=null;
-    if (!gesture.active) return;
+    if (!gesture?.active) return;
     const delta=track.scrollLeft-gesture.left;
     const from=Math.round(gesture.left/track.clientWidth);
-    const step=event.type==='pointercancel' || Math.abs(delta)<track.clientWidth*.14 ? 0 : Math.sign(delta);
+    const step=cancelled || Math.abs(delta)<track.clientWidth*.14 ? 0 : Math.sign(delta);
     const to=Math.max(0,Math.min(pages.length-1,from+step));
     track.classList.remove('turning');
     track.scrollTo({left:to*track.clientWidth,behavior:reduced.matches?'instant':'smooth'});
   }
-  track.addEventListener('pointerup',finishDrag);
-  track.addEventListener('pointercancel',finishDrag);
+  track.addEventListener('touchstart',event=>{
+    if(event.touches.length===1) begin(event.touches[0].clientX,event.touches[0].clientY);
+    else finish(true);
+  },{passive:true});
+  track.addEventListener('touchmove',event=>{
+    const point=event.touches[0];
+    if(point && event.touches.length===1 && move(point.clientX,point.clientY) && event.cancelable) event.preventDefault();
+  },{passive:false});
+  track.addEventListener('touchend',()=>finish(false));
+  track.addEventListener('touchcancel',()=>finish(true));
+  track.addEventListener('pointerdown',event=>{
+    if(event.pointerType==='mouse' && event.button===0) begin(event.clientX,event.clientY);
+  });
+  track.addEventListener('pointermove',event=>{
+    if(event.pointerType==='mouse' && move(event.clientX,event.clientY)) track.setPointerCapture(event.pointerId);
+  });
+  track.addEventListener('pointerup',event=>{if(event.pointerType==='mouse') finish(false);});
+  track.addEventListener('pointercancel',event=>{if(event.pointerType==='mouse') finish(true);});
   track.addEventListener('scroll',schedule,{passive:true});
   window.addEventListener('scroll',()=>{if(nearSeam) schedule();},{passive:true});
   new IntersectionObserver(([entry])=>{nearSeam=entry.isIntersecting;schedule();},
