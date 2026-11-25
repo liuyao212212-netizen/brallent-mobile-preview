@@ -356,7 +356,8 @@ function installGallery(galleries) {
     viewer.classList.toggle('rack-viewer', Boolean(figure.closest('.rack')));
     photo.src = source.currentSrc || source.src;
     photo.alt = source.alt + side;
-    caption.textContent = figure.querySelector('figcaption').textContent + side + '　' + (at+1) + ' / ' + count;
+    const name = figure.querySelector('figcaption').textContent + side;
+    caption.textContent = figure.closest('.rack') ? name : name + '　' + (at+1) + ' / ' + count;
   }
   galleries.forEach(gallery=>{
     const figures=[...gallery.querySelectorAll('figure')];
@@ -386,28 +387,37 @@ if(galleries.length)installGallery(galleries);
 
 function installRack(rack) {
   const pieces = [...rack.querySelectorAll('.rack-piece')];
-  const choices = [...rack.querySelectorAll('.rack-choices button')];
   const room = rack.querySelector('.rack-room');
+  const controls = rack.querySelector('.rack-controls');
+  const status = rack.querySelector('.rack-announcement');
   let current = 0;
+
   function select(index) {
     current = (index + pieces.length) % pieces.length;
     pieces.forEach((piece, i) => {
-      const selected = i === current;
-      const offset = (i - current + pieces.length) % pieces.length;
-      const slot = offset === pieces.length - 1 ? 3 : offset;
-      piece.hidden = offset > 2 && offset !== pieces.length - 1;
-      piece.dataset.slot = slot;
+      let offset = (i - current + pieces.length) % pieces.length;
+      if (offset > pieces.length / 2) offset -= pieces.length;
+      const depth = Math.abs(offset);
+      const direction = Math.sign(offset);
+      // Open a space around the selected garment; pack the others along the rail.
+      const distance = depth ? 25 + 28 * (1 - Math.exp(-(depth - 1) / 3.1)) : 0;
+      const angle = depth ? 54 + 19 * (1 - Math.exp(-depth / 3)) : 0;
+      piece.style.setProperty('--pos', (50 + direction * distance) + '%');
+      piece.style.setProperty('--angle', (-direction * angle) + 'deg');
+      piece.style.setProperty('--size', depth ? .87 - .012 * depth : 1);
+      piece.style.setProperty('--tone', Math.max(.78, 1 - depth * .04));
+      piece.style.zIndex = pieces.length - depth;
       const open = piece.querySelector('button');
-      open.tabIndex = selected ? 0 : -1;
-      const name = choices[i].textContent;
-      open.setAttribute('aria-label', selected ? '查看' + name + '大图' : '选择' + name);
-      if (selected) open.setAttribute('aria-haspopup','dialog');
-      else open.removeAttribute('aria-haspopup');
-      choices[i].setAttribute('aria-pressed', String(selected));
+      const name = piece.querySelector('img').alt;
+      open.tabIndex = depth ? -1 : 0;
+      open.setAttribute('aria-label', depth ? '选择' + name : '放大查看' + name);
+      if (depth) open.removeAttribute('aria-haspopup');
+      else open.setAttribute('aria-haspopup','dialog');
     });
-    rack.querySelector('.rack-count').value = String(current + 1).padStart(2,'0') + ' / ' + String(pieces.length).padStart(2,'0');
+    status.textContent = pieces[current].querySelector('img').alt;
   }
-  choices.forEach((button, i) => button.addEventListener('click', () => select(i)));
+  controls.querySelector('.rack-prev').onclick = () => select(current - 1);
+  controls.querySelector('.rack-next').onclick = () => select(current + 1);
   let start, suppressClickUntil = 0;
   room.addEventListener('pointerdown', e => { if (e.isPrimary) start = [e.clientX, e.clientY]; });
   function releaseDrag() {
@@ -444,10 +454,10 @@ function installRack(rack) {
     if (!['ArrowLeft','ArrowRight'].includes(e.key)) return;
     e.preventDefault();
     select(current + (e.key === 'ArrowLeft' ? -1 : 1));
-    choices[current].focus();
+    pieces[current].querySelector('button').focus({preventScroll:true});
   });
   select(0);
-  rack.querySelector('.rack-choices').hidden = false;
+  controls.hidden = false;
   rack.classList.add('rack-ready');
   requestAnimationFrame(() => requestAnimationFrame(() => rack.classList.add('rack-interactive')));
 }
