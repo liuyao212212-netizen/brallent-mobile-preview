@@ -515,3 +515,25 @@
   .home #cases h2 { margin-bottom:12px; }
   .home .portfolio .case-strip { margin-top:12px; }
 }
+
+.hero-case-preview { width:min(45%,430px); margin-top:25px; pointer-events:auto; }
+.hero-case-preview h2 { margin:0 0 8px; font-size:15px; font-weight:600; color:#e5f5ff; }
+.hero-case-tiles { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.hero-case-tiles a { min-width:0; color:#f0f6fb; }
+.hero-case-tiles img,.hero-case-chart { width:100%; height:clamp(66px,7vw,100px); border-radius:6px; }
+.hero-case-tiles img { object-fit:cover; object-position:50% 40%; }
+.hero-case-chart { display:flex; flex-direction:column; justify-content:center; gap:4px; padding:8px;
+  background:linear-gradient(135deg,#1a4560,#15334e 60%,#102539); border:1px solid #37566a; }
+.hero-case-chart small { font-size:12px; color:#c2ddea; }
+.hero-case-chart strong { font-size:clamp(14px,1.4vw,20px); color:#abf0fc; white-space:nowrap; }
+.hero-case-tiles b { display:block; padding:4px 0 2px; font-size:13px; line-height:1.4; font-weight:550; }
+@media(max-width:680px) {
+  .company-hero-layout { display:contents; }
+  .company-lead { order:-1; position:relative; z-index:1; padding:66px var(--pad) 0; }
+  .hero-case-preview { order:1; flex:none; width:100%; margin:0; padding:8px var(--pad) max(8px,env(safe-area-inset-bottom));
+    background:#0b1b30; border-top:1px solid #204052; }
+  .hero-case-preview h2 { margin:0 0 5px; font-size:14px; }
+  .hero-case-tiles { gap:8px; }
+  .hero-case-tiles img,.hero-case-chart { height:clamp(55px,9svh,90px); }
+  .company-hero .atrium { min-height:0; }
+}
