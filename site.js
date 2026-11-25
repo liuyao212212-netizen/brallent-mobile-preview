@@ -629,3 +629,19 @@ if (fdeJourney) installFdeJourney(fdeJourney);
 
 const industryBrowser = document.querySelector('.industry-browser');
 if (industryBrowser) installFdeJourney(industryBrowser, true);
+
+document.querySelectorAll('.scene-switch').forEach(control => {
+  const slide = control.closest('.industry-slide');
+  const buttons = [...control.querySelectorAll('button')];
+  function select(mode) {
+    slide.dataset.mode = mode;
+    for (const button of buttons) {
+      const selected = button.dataset.mode === mode;
+      button.setAttribute('aria-pressed', String(selected));
+      document.getElementById(button.getAttribute('aria-controls')).hidden = !selected;
+    }
+  }
+  for (const button of buttons) button.addEventListener('click', () => select(button.dataset.mode));
+  select('field');
+  control.hidden = false;
+});
