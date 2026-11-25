@@ -366,7 +366,7 @@ function installGallery(galleries) {
     inquiry.hidden=!anonymous;
     photo.src = source.currentSrc || source.src;
     photo.alt = source.alt + side;
-    const name = figure.querySelector('figcaption').textContent + side;
+    const name = figure.closest('.look-photos') ? source.alt : figure.querySelector('figcaption').textContent + side;
     caption.textContent = figure.closest('.rack') ? name : name + '　' + (at+1) + ' / ' + count;
   }
   galleries.forEach(gallery=>{
