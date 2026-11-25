@@ -10,6 +10,32 @@ const ease = (t,start,end) => {
 const mix = (a,b,t) => a+(b-a)*t;
 const between = (a,b,t) => [mix(a[0],b[0],t),mix(a[1],b[1],t)];
 
+// The desk, portable sheet and sample carry the same small canopy revision.
+const canopy = [[0,0],[26,-14],[64,-11],[38,5],[0,0],[1,10],[38,15],[38,5],[64,-11],[64,-1],[38,15]];
+function canopyLine(ctx,progress) {
+  const distance=progress*(canopy.length-1);
+  ctx.beginPath();ctx.moveTo(...canopy[0]);
+  for(let n=1;n<canopy.length;n++){
+    const fraction=Math.max(0,Math.min(1,distance-n+1));
+    ctx.lineTo(...between(canopy[n-1],canopy[n],fraction));
+    if(fraction<1)break;
+  }
+  ctx.stroke();
+}
+function deskPose(t) {
+  // Both sides are active as the page opens, and again while the model is being checked.
+  const phrase=1-ease(t,2.9,3.65)+ease(t,6.25,6.85);
+  const beat=t*2.1;
+  const tap=offset=>phrase*Math.max(0,Math.cos((beat+offset)*Math.PI*2))**2;
+  const draft=ease(t,-.55,2.8);
+  const step=draft*(canopy.length-1),index=Math.min(canopy.length-2,Math.floor(step));
+  const cursor=between(canopy[index],canopy[index+1],step-index);
+  const rest=ease(t,8,10);
+  return {left:tap(0),right:tap(.46),draft,
+    penX:cursor[0]*(1-rest),penY:cursor[1]*(1-rest),
+    ink:1-ease(t,8.5,9.85), beat};
+}
+
 function poseAt(time) {
   const t=time%10;
   const reset=1-ease(t,8.8,9.95);
@@ -25,7 +51,7 @@ function poseAt(time) {
   const approve=ease(t,6.22,6.94)*(1-ease(t,8.25,9.1));
   const nod=Math.sin(Math.PI*ease(t,6.75,7.55));
   return {
-    trace,adjust,approve,nod,
+    trace,adjust,approve,nod,desk:deskPose(t),
     t,offer,catchSheet,take,release,look,point,
     sheetX:536+96*offer+56*take,
     sheetY:653-15*offer+49*take,
@@ -58,6 +84,81 @@ function glove(ctx,art,id,at,rotation) {
   ctx.translate(-g.wrist[0],-g.wrist[1]);ctx.clip(g.mask);
   ctx.drawImage(art,-370,-512,W,H);ctx.restore();
 }
+// A shallow metal keyboard lies along the near edge of the glass, beneath the real cuffs.
+function drawKeyboard(ctx,p) {
+  ctx.save();
+  ctx.transform(1,-.235,.57,.67,204,1014);
+  const metal=ctx.createLinearGradient(0,0,0,81);
+  metal.addColorStop(0,'#7495a6');metal.addColorStop(.06,'#32485a');metal.addColorStop(.91,'#1c3145');metal.addColorStop(1,'#819caf');
+  ctx.fillStyle=metal;ctx.strokeStyle='#9ac1cd';ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.roundRect(0,0,295,79,7);ctx.fill();ctx.stroke();
+  const active=Math.floor(p.desk.beat);
+  for(let row=0;row<4;row++){
+    for(let col=0;col<13;col++){
+      if(row===3 && col>3 && col<9)continue;
+      const down=col===2+active%3 && row===1 ? p.desk.left :
+                 col===10+active%2 && row===active%3 ? p.desk.right : 0;
+      const x=7+col*21.5,y=6+row*17+down*2,w=row===3&&col===3?124:18;
+      ctx.fillStyle=down>.23?'#98f2ff':'#172e41';
+      ctx.fillRect(x,y,w,13);
+      ctx.fillStyle=down>.23?'#fff':'#678797';
+      ctx.fillRect(x+3,y+2,w-6,1.7);
+    }
+  }
+  ctx.restore();
+}
+function drawDeskDraft(ctx,p,mesh) {
+  const desk=p.desk;
+  const wristX=-19*p.point-20*p.adjust+.99*desk.penX;
+  const wristY=11*p.point+10*p.adjust+.99*desk.penY;
+  // On a flat canvas the resting glove stays still and the stylus pivots in its grip.
+  const hold=[637+(mesh?wristX*.91:0),1014+(mesh?wristY*.91:0)];
+  const tip=[594+desk.penX-19*p.point-20*p.adjust,1065+desk.penY+11*p.point+10*p.adjust];
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.save();ctx.translate(594,1065);ctx.globalAlpha=desk.ink;
+  ctx.shadowBlur=5;ctx.shadowColor='#ffc987';ctx.strokeStyle='#ffe1a7';ctx.lineWidth=3;
+  canopyLine(ctx,desk.draft);ctx.restore();
+  const back=[hold[0]+(hold[0]-tip[0])*.38,hold[1]+(hold[1]-tip[1])*.38];
+  ctx.beginPath();ctx.moveTo(...back);ctx.lineTo(...tip);
+  ctx.strokeStyle='#142a40';ctx.lineWidth=8;ctx.stroke();
+  ctx.strokeStyle='#a1beca';ctx.lineWidth=4;ctx.stroke();
+  ctx.strokeStyle='#ebfcff';ctx.lineWidth=1.4;ctx.stroke();
+  ctx.beginPath();ctx.arc(...tip,3,0,Math.PI*2);ctx.fillStyle='#ffe3aa';ctx.fill();
+  ctx.restore();
+}
+function drawCuffs(ctx,plate,p,mesh) {
+  // Restore just the foreground fingers over the keyboard and pen shafts.
+  // Sample the same warped surface as the base layer so the edges meet their sleeves.
+  ctx.save();
+  const regions=[
+    [251,1007,71,45,.09],[499,949,44,36,-.12],[660,981,38,38,-.32]
+  ];
+  ctx.beginPath();
+  for(const [x,y,rx,ry,angle] of regions){
+    const dx=mesh && x===660?p.desk.penX*.62-14*p.point-13*p.adjust:0;
+    const dy=mesh && x===660?p.desk.penY*.62+9*p.point+7*p.adjust:0;
+    ctx.moveTo(x+dx+rx*Math.cos(angle),y+dy+rx*Math.sin(angle));
+    ctx.ellipse(x+dx,y+dy,rx,ry,angle,0,Math.PI*2);
+    ctx.closePath();
+  }
+  ctx.clip();
+  if(mesh){
+    ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(mesh,0,0);
+  }else{ctx.drawImage(plate,0,0,W,H);}
+  ctx.restore();
+}
+function sharedTablets(ctx,p) {
+  // Keep the revision on the displays already held by the two pairs in the room.
+  const tablets=[[310,568,.69],[736,450,.58]];
+  for(const [x,y,size] of tablets){
+    ctx.save();ctx.transform(size,-.09,-.13,size,x,y);
+    ctx.globalAlpha=.85*p.desk.ink;ctx.lineWidth=3.4;ctx.lineJoin='round';
+    ctx.strokeStyle=p.approve>.25?'#ffe4ac':'#bdf6ff';
+    ctx.shadowBlur=3;ctx.shadowColor=ctx.strokeStyle;
+    canopyLine(ctx,p.desk.draft);
+    ctx.restore();
+  }
+}
 function drawHandoff(ctx,art,p) {
   const cos=Math.cos(p.angle),sin=Math.sin(p.angle);
   const attached=(x,y)=>[p.sheetX+x*cos-y*p.tilt*sin,p.sheetY+x*sin+y*p.tilt*cos];
@@ -79,6 +180,9 @@ function drawHandoff(ctx,art,p) {
   ctx.globalCompositeOperation='screen';ctx.globalAlpha=.88;
   ctx.drawImage(art,543/W*art.naturalWidth,634/H*art.naturalHeight,169/W*art.naturalWidth,81/H*art.naturalHeight,-99,-44,198,88);
   ctx.restore();
+  ctx.save();ctx.translate(-17,-1);ctx.scale(.9,.9);ctx.lineWidth=3.2;
+  ctx.strokeStyle='#ffe4a6';ctx.lineJoin='round';ctx.globalAlpha=p.desk.ink;
+  canopyLine(ctx,p.desk.draft);ctx.restore();
   const scan=-110+220*p.offer;
   const bar=ctx.createLinearGradient(scan-18,0,scan+4,0);
   bar.addColorStop(0,'rgba(84,225,255,0)');bar.addColorStop(.87,'rgba(128,242,255,.32)');bar.addColorStop(1,'rgba(128,242,255,0)');
@@ -192,10 +296,10 @@ async function startAtrium(stage) {
     const motion=[
       [12*p.offer+5*p.look,16*p.look+6*p.nod,.13*p.look-.045*p.offer],
       [-16*p.catchSheet-7*p.look,20*p.look,-.16*p.look+.06*p.catchSheet],
-      [-19*p.point-20*p.adjust,11*p.point+10*p.adjust,-.05*p.adjust],[5*p.point-9*p.adjust,7*p.look+11*p.nod,-.045*p.look-.045*p.adjust],
-      [7*p.look+11*p.trace,9*p.look+9*p.nod,.06*p.look+.06*p.trace],[3*Math.sin(a)+5*p.approve,2*Math.cos(a)+5*p.nod,0],
-      [4*Math.sin(a+.3),2*Math.cos(a),0],[-3*Math.sin(a),2*Math.cos(a)+7*p.nod,-.05*p.approve],
-      [54*p.trace,8*p.trace,-.09*p.trace],[13*p.approve,-12*p.approve,-.08*p.approve]
+      [-19*p.point-20*p.adjust+p.desk.penX,11*p.point+10*p.adjust+p.desk.penY,-.05*p.adjust],[5*p.point-9*p.adjust,7*p.look+11*p.nod,-.045*p.look-.045*p.adjust],
+      [7*p.look+11*p.trace,9*p.look+9*p.nod,.06*p.look+.06*p.trace],[3*Math.sin(a)+6*p.desk.draft*p.desk.ink,3*Math.cos(a)+7*p.approve,.07*p.desk.draft*p.desk.ink],
+      [3*Math.sin(a+.3),2*Math.cos(a),0],[-3*Math.sin(a)-8*p.approve,3*Math.cos(a)+7*p.nod,-.08*p.approve],
+      [16*p.trace-8*p.desk.left,5*p.trace+12*p.desk.left,-.12*p.desk.left],[9*p.approve+5*p.desk.right,-7*p.approve+12*p.desk.right,.10*p.desk.right]
     ];
     panX+=(pointerX-panX)*.08;panY+=(pointerY-panY)*.08;
     const x=originX+(surface?panX*3*scale:0),y=originY+(surface?panY*2*scale:0);
@@ -204,7 +308,9 @@ async function startAtrium(stage) {
     const px=light.width/viewWidth,py=light.height/viewHeight;
     brush.setTransform(px*scale,0,0,py*scale,px*x,py*y);
     if(!surface)brush.drawImage(plate,0,0,W,H);
-    drawHandoff(brush,art,p);drawSignal(brush,p);reviewModel(brush,p);
+    sharedTablets(brush,p);drawHandoff(brush,art,p);drawSignal(brush,p);reviewModel(brush,p);
+    drawKeyboard(brush,p);drawDeskDraft(brush,p,Boolean(surface));
+    drawCuffs(brush,plate,p,surface?canvas:null);
     stage.classList.toggle('motion-ready',Boolean(surface));
   }
   function tick(now) {
