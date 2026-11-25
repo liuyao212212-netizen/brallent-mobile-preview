@@ -803,11 +803,7 @@
 
 /* Industry index and its selected project cover. */
 /* A continuous contact sheet: the frame, lighting and position marker follow the swipe. */
-.journal-heading {display:flex; justify-content:space-between; align-items:center; min-height:44px; gap:12px}
-.journal-heading h3 {font-size:clamp(19px,2vw,28px); margin:0}
-.journal-arrows {display:flex; gap:4px}
-.journal-arrows button {width:44px; height:44px; border:1px solid #bacddd; background:#fff; color:#173c55; border-radius:50%; font:26px/1 system-ui; cursor:pointer}
-.journal-arrows button:disabled {opacity:.4; cursor:default}
+.fde-highlights > h3 {margin:0 0 10px}
 .case-journal {--playhead:0%; background:linear-gradient(135deg,#182e42,#071420 66%); color:#fff; border:1px solid #243d54; border-radius:16px; padding:8px 0 15px; overflow:hidden}
 .journal-choices {display:flex; gap:5px; overflow-x:auto; padding:0 15px 6px; scrollbar-width:none}
 .journal-choices button {position:relative; flex:none; min-height:44px; padding:0 8px; font:inherit; font-size:14px; background:transparent; border:0; color:#bccbd5; cursor:pointer}
@@ -829,7 +825,7 @@
 .journal-cover i,.journal-related i {font-style:normal}
 .journal-ruler {position:relative; height:8px; margin:11px 22px 0; background:repeating-linear-gradient(90deg,#567283 0 1px,transparent 1px 8px) left center/100% 4px no-repeat}
 .journal-ruler i {position:absolute; left:clamp(0px,var(--playhead),calc(100% - 16px)); width:16px; height:3px; top:2px; border-radius:3px; background:#9cfbe1; box-shadow:0 0 9px #65f4d7}
-.journal-arrows[hidden],.journal-choices[hidden] {display:none}
+.journal-choices[hidden] {display:none}
 .case-journal :focus-visible {outline:2px solid #91efeb; outline-offset:-3px}
 @media(prefers-reduced-motion:no-preference) {
   .journal-track article .journal-cover {transform:perspective(740px) rotateY(var(--turn,0deg)) scale(var(--zoom,1)); opacity:var(--clarity,1)}

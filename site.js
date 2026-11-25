@@ -595,7 +595,6 @@ function installCaseJournal(journal) {
   const cards = [...track.children];
   const strip = journal.querySelector('.journal-choices');
   const choices = [...strip.children];
-  const arrows = journal.parentElement.querySelector('.journal-arrows');
   let current = -1;
   let frame = 0;
 
@@ -621,8 +620,6 @@ function installCaseJournal(journal) {
     current = nearest;
     choices.forEach((b,i) => b.setAttribute('aria-pressed', String(i === current)));
     cards.forEach((c,i) => c.classList.toggle('settled',i === current));
-    arrows.children[0].disabled = current === 0;
-    arrows.children[1].disabled = current === cards.length - 1;
     const tab = choices[current].getBoundingClientRect();
     const bar = strip.getBoundingClientRect();
     strip.scrollLeft += (tab.left + tab.right - bar.left - bar.right) / 2;
@@ -633,8 +630,6 @@ function installCaseJournal(journal) {
     track.scrollTo({left:card.offsetLeft - cards[0].offsetLeft, behavior:reducedMotion.matches ? 'instant' : 'smooth'});
   }
   choices.forEach((button,i) => button.addEventListener('click', () => go(i)));
-  arrows.children[0].addEventListener('click', () => go(current - 1));
-  arrows.children[1].addEventListener('click', () => go(current + 1));
   track.addEventListener('keydown', event => {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
     event.preventDefault();
@@ -654,7 +649,6 @@ function installCaseJournal(journal) {
     entrance.observe(journal);
   }
   strip.hidden = false;
-  arrows.hidden = false;
   render();
 }
 document.querySelectorAll('.case-journal').forEach(installCaseJournal);
