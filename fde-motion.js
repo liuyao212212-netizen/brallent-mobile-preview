@@ -12,9 +12,9 @@
   // same camera, so switching steps feels like exploring one space.
   const turn = 2 * Math.PI;
   const palettes = [
-    ['#67c7ff','#b39aff','#ffd197'], ['#8c9eff','#7de8f4','#e5e0ff'],
-    ['#679dfe','#6df0d7','#e2fffb'], ['#80ddec','#c69eff','#fff2d3'],
-    ['#74b1ff','#a998ff','#9ff2e0']
+    ['#407ce9','#9166cf','#8761cc'], ['#7668d4','#34aeb5','#3f8bab'],
+    ['#3574db','#1bb3a2','#3064b6'], ['#3898b4','#a467bd','#896ab6'],
+    ['#386fd1','#7465d8','#318e9a']
   ];
   function mix(a,b,t) { return a+(b-a)*t; }
   function mixColor(a,b,t) {
@@ -38,15 +38,21 @@
       g.addColorStop(0,color);g.addColorStop(1,color.slice(0,7)+'00');
       ctx.fillStyle=g;ctx.fillRect(x-r,y-r,2*r,2*r);
     }
-    halo(185,107,105,blue+'27');
-    halo(235,79,90,lilac+'19');
-    for(let n=1;n<118;n++) {
-      const x=(n*153.37)%390, y=(n*n*17.63)%206;
-      ctx.globalAlpha=.2+.31*(1+sin(n+theta))/2;
-      ctx.fillStyle=n%4?blue:white;
-      ctx.fillRect(x,y,n%8?.85:1.65,n%8?.85:1.65);
+    function pane(x,y,w,h,fill,angle) {
+      ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(-w/2,-h/2,w,h,11);
+      else ctx.rect(-w/2,-h/2,w,h);
+      ctx.shadowColor='#41538624';ctx.shadowBlur=13;ctx.shadowOffsetY=5;
+      ctx.fillStyle=fill;ctx.fill();ctx.shadowColor='transparent';
+      ctx.strokeStyle='#ffffffdb';ctx.lineWidth=1;ctx.stroke();ctx.restore();
     }
-    ctx.globalAlpha=1;
+    halo(100,94,116,blue+'42');
+    halo(268,96,102,lilac+'45');
+    const sway=sin(theta),depth=sin(position*.85);
+    pane(243+depth*6,75-2*sway,184,101,'#ffffff55',.05);
+    pane(143-depth*5,115+sway*2,195,105,'#ffffff65',-.09);
+    pane(195,102,260,138,'#fafdff9c',-.035);
     function shape(stage,u,v) {
       const a=u*turn, b=v*turn;
       if(stage===1) {
@@ -76,7 +82,7 @@
       return [mix(start[0],end[0],blend),mix(start[1],end[1],blend)];
     }
     ctx.save();
-    ctx.globalCompositeOperation='lighter';
+    ctx.translate(38,12);ctx.scale(.80,.85);
     for(let j=0;j<40;j++) {
       const v=(j+.3)/40;
       ctx.beginPath();
@@ -85,7 +91,7 @@
         if(n===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       }
       ctx.lineWidth=j%9===0?1.05:.6;
-      ctx.strokeStyle=(j<20?blue:lilac)+(j%9===0?'a8':'66');
+      ctx.strokeStyle=(j<20?blue:lilac)+(j%9===0?'e0':'76');
       ctx.stroke();
       const u=(phase+j*.087)%1;
       const [x,y]=project(u,v);
@@ -96,8 +102,16 @@
     const u=mix(index===0?.58:sweep,next===0?.58:sweep,blend);
     const [x,y]=project(u,.45);
     halo(x,y,18,white+'ac');
-    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,2.1,0,turn);ctx.fill();
+    ctx.fillStyle=white;ctx.beginPath();ctx.arc(x,y,2.1,0,turn);ctx.fill();
     ctx.restore();
+    const notes=['定位业务卡点','确认实施方案','上线首个场景','团队独立操作','复盘运行反馈'];
+    const tagX=291+depth*4,tagY=155+2*sway;
+    pane(tagX,tagY,101,30,'#ffffffed',0);
+    ctx.fillStyle=blue;ctx.beginPath();ctx.arc(tagX-36,tagY,3,0,turn);ctx.fill();
+    ctx.font='600 12px system-ui,sans-serif';ctx.textBaseline='middle';
+    ctx.fillStyle='#26334c';ctx.globalAlpha=Math.abs(1-2*blend);
+    ctx.fillText(notes[blend<.5?index:next],tagX-26,tagY);ctx.globalAlpha=1;
+
   }
 
 
