@@ -503,7 +503,3 @@
   .look-photos { grid-template-columns:2.9fr 1fr; }
 }
 @media(prefers-reduced-motion:reduce) { .rack-ready .rack-pieces { translate:none; } }
-
-#inquiry.hosted-inquiry { min-width:0; padding:0; overflow:hidden; background:#fff; color:var(--ink); border-radius:16px; }
-.hosted-inquiry iframe { display:block; width:100%; height:clamp(580px,78svh,900px); border:0; }
-#inquiry.hosted-inquiry .form-note { margin:0; padding:12px 16px; font-size:14px; }

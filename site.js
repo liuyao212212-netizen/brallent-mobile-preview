@@ -62,16 +62,49 @@ if (caseFilters) {
     }
   }, {passive:true});
 }
-const inquiry = document.querySelector('.hosted-inquiry');
-if (inquiry) {
+const form = document.querySelector('#inquiry');
+if (form) {
+  const result = form.querySelector('.result');
+  const labels = {name:'姓名',company:'公司',role:'职位',email:'工作邮箱',phone:'工作电话',size:'企业规模',service:'业务',message:'需求',source_service:'浏览的服务'};
   const params = new URLSearchParams(location.search);
-  const link = inquiry.querySelector('.standalone-form');
-  const formURL = new URL(link.href);
-  const services = new Map([['fde', 'FDE 定制'], ['apparel', '服装定制']]);
-  const service = services.get(params.get('service'));
-  if (service) formURL.searchParams.set('prefill_咨询业务', service);
-  link.href = formURL.href;
-  inquiry.querySelector('iframe').src = formURL.href;
+  const sourceOption = [...form.elements.service.options].find(option => option.dataset.service === params.get('service'));
+  if (sourceOption) {
+    sourceOption.defaultSelected = true;
+    sourceOption.selected = true;
+    form.elements.source_service.defaultValue = sourceOption.value;
+    form.elements.source_service.disabled = false;
+  }
+  function emailOption(data, preview = false) {
+    const draft = Object.entries(data).filter(([,v])=>v).map(([k,v]) => labels[k]+'：'+v).join('\n');
+    const mail = document.createElement('a');
+    mail.href = 'mailto:rose@brallent.cn?subject='+encodeURIComponent('Brallent 企业定制预约')+'&body='+encodeURIComponent(draft);
+    mail.textContent = '用邮件发送预约';
+    result.replaceChildren(preview ? '请在邮件应用中确认发送。需要重新打开时可点' : '在线提交暂不可用。您也可以',mail,'。');
+    if (preview) window.location.href = mail.href;
+  }
+  form.addEventListener('submit',async event => {
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(form));
+    if (form.dataset.delivery === 'email') {emailOption(values, true);return;}
+    if (location.protocol === 'file:') {emailOption(values);return;}
+    const submit = form.querySelector('[type="submit"]');
+    submit.disabled = true;
+    result.textContent = '正在提交…';
+    try {
+      const response = await fetch(form.action, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(values)});
+      if (response.status === 422) {
+        result.textContent = '请检查公司名称、姓名、工作邮箱及选填的工作电话。';
+        return;
+      }
+      if (!response.ok || !(await response.json()).received) throw new Error('Submission unavailable');
+      result.textContent = '咨询已登记。感谢您留下联系方式。';
+      form.reset();
+    } catch {
+      emailOption(values);
+    } finally {
+      submit.disabled = false;
+    }
+  });
 }
 const floatContact = document.querySelector('.float-contact');
 const inquirySection = document.querySelector('#contactForm');
