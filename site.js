@@ -124,7 +124,7 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 function installEntrances() {
   if (!('IntersectionObserver' in window) || reducedMotion.matches) return;
   const selector = [
-    '.section .wrap > h2', '.blocks > article', '.sector-tile', '.sector-flow > li', '.process > li',
+    '.section .wrap > h2', '.blocks > article', '.sector-flow > li', '.process > li',
     '.case-strip > a', '.casegrid > a', '.gallery > figure', '.service-catalog > article',
     '.reader > h2', '.reader > p', '.form-layout > div', '.form-layout > form'
   ].join(',');
@@ -566,10 +566,10 @@ function installResultCounters() {
 }
 installResultCounters();
 
-function installFdeJourney(journey) {
-  const nav = journey.querySelector('.fde-stage-nav');
+function installFdeJourney(journey, industry = false) {
+  const nav = journey.querySelector(industry ? '.industry-tabs' : '.fde-stage-nav');
   const buttons = [...nav.querySelectorAll('button')];
-  const deck = journey.querySelector('.fde-stage-deck');
+  const deck = journey.querySelector(industry ? '.industry-track' : '.fde-stage-deck');
   const slides = [...deck.children];
   let current = -1;
 
@@ -585,6 +585,19 @@ function installFdeJourney(journey) {
       else button.removeAttribute('aria-current');
     });
     nav.style.setProperty('--progress', index / (slides.length - 1));
+    if (industry) {
+      slides.forEach((slide, i) => { slide.inert = i !== index; });
+      const tab = buttons[index].getBoundingClientRect();
+      const strip = nav.getBoundingClientRect();
+      if (tab.left < strip.left || tab.right > strip.right) {
+        nav.scrollLeft += (tab.left + tab.right - strip.left - strip.right) / 2;
+      }
+      const url = new URL(location.href);
+      if (index || url.searchParams.has('industry')) {
+        url.searchParams.set('industry', slides[index].dataset.industry);
+        history.replaceState(history.state, '', url);
+      }
+    }
   }
   function go(index) {
     const offset = slides[index].getBoundingClientRect().left - deck.getBoundingClientRect().left;
@@ -602,9 +615,17 @@ function installFdeJourney(journey) {
   });
   journey.classList.add('ready');
   nav.hidden = false;
+  if (industry) {
+    const key = new URL(location.href).searchParams.get('industry');
+    const initial = slides.find(slide => slide.dataset.industry === key);
+    if (initial) deck.scrollLeft += initial.getBoundingClientRect().left - deck.getBoundingClientRect().left;
+  }
   deck.addEventListener('scroll', showPosition, {passive:true});
   window.addEventListener('resize', showPosition);
   showPosition();
 }
 const fdeJourney = document.querySelector('.fde-journey');
 if (fdeJourney) installFdeJourney(fdeJourney);
+
+const industryBrowser = document.querySelector('.industry-browser');
+if (industryBrowser) installFdeJourney(industryBrowser, true);
