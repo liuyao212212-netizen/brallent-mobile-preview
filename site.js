@@ -593,8 +593,8 @@ document.querySelectorAll('.scene-switch').forEach(control => {
 function installCaseJournal(journal) {
   const track = journal.querySelector('.journal-track');
   const cards = [...track.children];
-  const picker = journal.closest('.fde-highlights').querySelector('.case-picker');
-  const select = picker.querySelector('select');
+  const picker = journal.querySelector('.case-filmstrip');
+  const thumbnails = [...picker.children];
   let current = -1;
   let frame = 0;
 
@@ -606,12 +606,17 @@ function installCaseJournal(journal) {
     const nearest = Math.round(position);
     cards.forEach((card,i) => {
       const offset = Math.max(-1, Math.min(1, i - position));
-      card.style.setProperty('--drift', (offset * 22) + '%');
+      card.style.setProperty('--scale', 1 + .10 * Math.abs(offset));
+      card.style.setProperty('--glint', Math.sin(Math.abs(offset) * Math.PI));
+      card.style.setProperty('--drift', (offset * 3) + '%');
       card.style.setProperty('--ribbon', (-offset * 15) + '%');
     });
     if (nearest === current) return;
     current = nearest;
-    select.value = String(current);
+    thumbnails.forEach((button,i) => button.setAttribute('aria-pressed', String(i === current)));
+    const tab = thumbnails[current].getBoundingClientRect();
+    const bar = picker.getBoundingClientRect();
+    picker.scrollLeft += (tab.left + tab.right - bar.left - bar.right) / 2;
     cards.forEach((c,i) => c.classList.toggle('settled',i === current));
   }
 
@@ -619,7 +624,7 @@ function installCaseJournal(journal) {
     const card = cards[Math.max(0, Math.min(cards.length - 1, index))];
     track.scrollTo({left:card.offsetLeft - cards[0].offsetLeft, behavior:reducedMotion.matches ? 'instant' : 'smooth'});
   }
-  select.addEventListener('change', () => go(select.selectedIndex));
+  thumbnails.forEach((button,i) => button.addEventListener('click', () => go(i)));
   track.addEventListener('keydown', event => {
     if (event.target !== track || !['ArrowLeft','ArrowRight'].includes(event.key)) return;
     event.preventDefault();
@@ -629,6 +634,15 @@ function installCaseJournal(journal) {
   function schedule() { if (!frame) frame = requestAnimationFrame(render); }
   track.addEventListener('scroll', schedule, {passive:true});
   window.addEventListener('resize', schedule);
+  if ('IntersectionObserver' in window && !reducedMotion.matches) {
+    const entrance = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        journal.classList.add('on-screen');
+        entrance.disconnect();
+      }
+    }, {threshold:.2});
+    entrance.observe(journal);
+  }
   picker.hidden = false;
   render();
 }
