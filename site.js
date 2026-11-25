@@ -108,12 +108,15 @@ if (form) {
 }
 const floatContact = document.querySelector('.float-contact');
 const inquirySection = document.querySelector('#contactForm');
+const footerContact = document.querySelector('footer .footgrid > div:last-child > a');
 function showContactShortcut() {
   const bounds = inquirySection?.getBoundingClientRect();
   const atContact = bounds && bounds.top < innerHeight && bounds.bottom > 0;
-  floatContact.hidden = scrollY < innerHeight * 0.65 || atContact;
+  const footerInReach = footerContact.getBoundingClientRect().top < innerHeight - 8;
+  floatContact.hidden = scrollY < innerHeight * 0.65 || atContact || footerInReach;
 }
 window.addEventListener('scroll', showContactShortcut, {passive:true});
+window.addEventListener('resize', showContactShortcut);
 showContactShortcut();
 
 // Start each entrance only when it reaches the viewport. Initial content stays readable.
