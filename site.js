@@ -168,62 +168,6 @@ function iconButton(label, glyph) {
   button.setAttribute('aria-label',label);button.textContent = glyph;
   return button;
 }
-function installCaseNavigation(strip) {
-  const cards = [...strip.children];
-  const controls = document.createElement('div');
-  controls.className = 'strip-controls';
-  const previous = iconButton('向前浏览案例','‹'), next = iconButton('向后浏览案例','›');
-  const position = document.createElement('span');
-  controls.append(previous,position,next);strip.after(controls);
-  const rail = document.createElement('div');
-  rail.className = 'case-industries';
-  rail.setAttribute('role', 'group');
-  rail.setAttribute('aria-label', '按行业浏览案例');
-  strip.id = 'home-case-slides';
-  rail.style.setProperty('--sectors', cards.length);
-  const choices = cards.map((card, i) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = card.dataset.sector;
-    button.setAttribute('aria-controls', strip.id);
-    button.style.setProperty('--order', i);
-    button.onclick = () => go(i);
-    rail.append(button);
-    return button;
-  });
-  strip.before(rail);
-
-  let active = 0;
-  function go(index) {
-    const target = cards[Math.min(cards.length - 1, Math.max(0, index))];
-    strip.scrollTo({
-      left: strip.scrollLeft + target.getBoundingClientRect().left - strip.getBoundingClientRect().left,
-      behavior: reducedMotion.matches ? 'instant' : 'smooth'
-    });
-  }
-  function update() {
-    const bounds = strip.getBoundingClientRect();
-    const offsets = cards.map(card => card.getBoundingClientRect().left - bounds.left);
-    active = offsets.reduce((nearest, x, i) => Math.abs(x) < Math.abs(offsets[nearest]) ? i : nearest, 0);
-    const last = cards.filter(card => card.getBoundingClientRect().right <= bounds.right + 2).length;
-    const end = strip.scrollWidth - strip.clientWidth;
-    controls.hidden = end < 2;
-    previous.disabled = strip.scrollLeft <= 2;
-    next.disabled = strip.scrollLeft >= end - 2;
-    const firstVisible = Math.max(0, cards.findIndex(card => card.getBoundingClientRect().right > bounds.left + 2));
-    position.textContent = (last > firstVisible + 1 ? (firstVisible + 1) + '–' + last : String(active + 1)) + ' / ' + cards.length;
-    rail.style.setProperty('--active-sector', active);
-    choices.forEach((choice, i) => choice.setAttribute('aria-pressed', String(i === active)));
-  }
-  previous.onclick = () => go(Math.ceil(strip.scrollLeft / (cards[1].offsetLeft - cards[0].offsetLeft) - 0.01) - 1);
-  next.onclick = () => go(active + 1);
-  strip.addEventListener('scroll', update, {passive:true});
-  new ResizeObserver(update).observe(strip);
-  update();
-}
-const caseStrip=document.querySelector('.case-strip');
-if(caseStrip && caseStrip.children.length>1) installCaseNavigation(caseStrip);
-
 function installMobileSections() {
   const phone = matchMedia('(max-width:680px) and (prefers-reduced-motion:no-preference)');
   const headings = document.querySelectorAll('.home #cases h2, .home #process h2, .home #contactForm h2, .company h1');
@@ -585,8 +529,8 @@ function installFdeJourney(journey, industry = false) {
       else button.removeAttribute('aria-current');
     });
     nav.style.setProperty('--progress', index / (slides.length - 1));
+    slides.forEach((slide, i) => { slide.inert = i !== index; });
     if (industry) {
-      slides.forEach((slide, i) => { slide.inert = i !== index; });
       const tab = buttons[index].getBoundingClientRect();
       const strip = nav.getBoundingClientRect();
       if (tab.left < strip.left || tab.right > strip.right) {
