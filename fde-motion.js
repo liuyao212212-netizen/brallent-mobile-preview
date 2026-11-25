@@ -12,88 +12,68 @@
   const tones=[[185,222,231],[206,207,244],[173,225,210],[236,220,190],[194,213,241]];
   let active=-1, beat=0, start=0, stepAt=0, manual=false, visible=false, frame=0, stride=0, last=-100;
 
-  function ellipse(x,y,w,h,fill) {
-    ctx.fillStyle=fill;ctx.beginPath();ctx.ellipse(x,y,w,h,0,0,Math.PI*2);ctx.fill();
-  }
-  function box(x,y,w,h,r,fill) {
-    ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();
-  }
-  function stroke(points,color,width) {
-    ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.lineJoin='round';
-    ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();
-  }
-  function label(content,x,y,size,color,weight=600) {
-    ctx.font=weight+' '+size+'px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=color;ctx.fillText(content,x,y);
-  }
+  const stills=scenes.map(scene=>scene.querySelector('.scene-still'));
+  const focus=[
+    [[.18,.75],[.55,.73],[.80,.69]],
+    [[.26,.75],[.51,.82],[.75,.85]],
+    [[.32,.65],[.62,.82],[.65,.60]],
+    [[.30,.75],[.51,.61],[.81,.84]],
+    [[.30,.72],[.50,.59],[.76,.76]]
+  ];
   function drawDesk(index,position,now) {
-    const t=motion.matches?1:Math.min(1,(now-stepAt)/650);
-    const reach=Math.sin(Math.max(0,t)*Math.PI/2);
-    const human=beat!==1, turn=human?reach:0, ai=human?0:reach;
-    const scene=scenes[index], doc=scene.dataset.document;
-    const a=Math.floor(position), b=Math.min(a+1,tones.length-1), fade=position-a;
-    const tint=tones[a].map((c,i)=>Math.round(c+(tones[b][i]-c)*fade)).join(',');
-    const bg=ctx.createLinearGradient(0,0,386,242);
-    bg.addColorStop(0,'#f8f8f2');bg.addColorStop(.55,'rgb('+tint+')');bg.addColorStop(1,'#edf1f7');
-    ctx.fillStyle=bg;ctx.fillRect(0,0,390,242);
-    // Fixed architectural details keep the viewer in the same room.
-    const light=ctx.createLinearGradient(0,0,0,195);
-    light.addColorStop(0,'#ffffffaa');light.addColorStop(1,'#ffffff18');
-    box(22,13,346,140,20,light);
-    stroke([[33,153],[356,153]],'#ffffffc4',1);
-    ellipse(194,206,163,15,'#34465c1a');
-    // Upholstered chair, consultant's jacket, collar, neck and profile.
-    box(26,141,57,51,13,'#4d656d');box(296,141,61,51,13,'#566779');
-    const suit=ctx.createLinearGradient(42,130,100,188);
-    suit.addColorStop(0,'#527d80');suit.addColorStop(1,'#20464d');
-    box(44,126,57,62,18,suit);
-    box(67,118,17,19,5,'#c78b69');ellipse(75,105,20,24,'#e2ac87');
-    ellipse(74,96,20,13,'#292d36');ellipse(59,105,7,13,'#33313a');
-    ellipse(80,99,13,7,'#34333a');ellipse(92,107,4,3.4,'#dfaa85');
-    ellipse(86,104,1.6,1.7,'#242831');stroke([[88,115],[84,116]],'#9b6050',1.5);
-    stroke([[65,131],[75,139],[84,131]],'#d6e1d8',3);
-    // The assistant has a ceramic shell, independent gaze and articulated wrists.
-    const shell=ctx.createLinearGradient(285,91,341,157);
-    shell.addColorStop(0,'#fffefa');shell.addColorStop(.55,'#dce7f1');shell.addColorStop(1,'#94acc3');
-    box(286,129,51,58,18,shell);box(300,117,18,14,5,'#708da6');
-    box(277,86,63,40,16,shell);box(280,96,46,22,10,'#18384b');
-    const eyeOffset=ai?-2:0;
-    box(289+eyeOffset,103,4,7,2,'#8df5de');box(308+eyeOffset,103,4,7,2,'#8df5de');
-    ellipse(335,107,6,8,'#9eafbe');ellipse(335,107,2.5,4,'#e6f8ff');
-    box(299,138,20,6,3,'#527883');box(303,140,6,2,1,'#98f7d9');
-    // The shared tabletop and document are in front of both seated figures.
-    ctx.fillStyle='#82999e';ctx.beginPath();ctx.moveTo(88,160);ctx.lineTo(301,160);ctx.lineTo(340,191);ctx.lineTo(54,191);ctx.closePath();ctx.fill();
-    stroke([[56,191],[339,191]],'#526e77',5);
-    stroke([[72,194],[68,207]],'#687d85',4);stroke([[323,194],[328,207]],'#687d85',4);
-    ctx.save();ctx.translate(195,143);
-    ctx.rotate(-.035+.018*ai);box(-62,-26,124,56,7,'#4b6677');box(-60,-25,120,52,6,'#fcfcf7');
-    label(doc,0,-12,13,'#244555');
-    if(index===4) {
-      stroke([[-43,16],[-27,11],[-10,14],[7,5],[23,8],[38,2]],'#368b78',2.5);
-      ellipse(beat===2?38:7,beat===2?2:5,3.2,3.2,'#dd8056');
-    } else {
-      const fields=[['重复录入','等待确认'],['AI 整理','人工审批'],['正常任务','待复核'],['按提示填写','提交任务']][index];
-      fields.forEach((field,j)=>{
-        box(-49+j*49,0,46,18,4,j===beat%2?'#d7eee5':'#e9edf1');
-        label(field,-26+j*49,9,10,'#285250');
-      });
-      if(beat===2) stroke([[35,-17],[39,-13],[46,-21]],'#318a71',2.3);
+    const scene=scenes[index], action=buttons[index][beat];
+    const progress=motion.matches ? 1 : Math.min(1,Math.max(0,(now-stepAt)/680));
+    const ease=1-(1-progress)**3;
+    const previous=focus[index][Math.max(0,beat-1)], point=focus[index][beat];
+    const x=previous[0]+(point[0]-previous[0])*ease, y=previous[1]+(point[1]-previous[1])*ease;
+    const lower=Math.floor(position),upper=Math.min(lower+1,scenes.length-1);
+    const blend=position-lower;
+    ctx.fillStyle='#102238';ctx.fillRect(0,0,390,242);
+    function shot(image,opacity) {
+      if(!image.complete || !image.naturalWidth || opacity<=0) return;
+      const zoom=motion.matches ? 1 : 1.035;
+      const w=390*zoom,h=195*zoom;
+      ctx.save();ctx.beginPath();ctx.rect(0,0,390,195);ctx.clip();ctx.globalAlpha=opacity;
+      ctx.translate(-(w-390)*x,-(h-195)*y);
+      if (motion.matches || progress===1) {
+        ctx.drawImage(image,0,0,w,h);
+      } else {
+        // Anchor both edges of the scene while the active employee leans into the task.
+        const slices=64,iw=image.naturalWidth,ih=image.naturalHeight;
+        const activeX=[.22,.53,.83][beat],pulse=Math.sin(progress*Math.PI);
+        for(let k=0;k<slices;k++) {
+          const u=(k+.5)/slices;
+          const shift=3.8*pulse*Math.exp(-((u-activeX)**2)/.012);
+          const mid=h*.70+shift,sx=k*iw/slices,dx=k*w/slices;
+          ctx.drawImage(image,sx,0,iw/slices,ih*.70,dx,0,w/slices+.25,mid);
+          ctx.drawImage(image,sx,ih*.70,iw/slices,ih*.30,dx,mid,w/slices+.25,h-mid);
+        }
+      }
+      ctx.restore();
     }
-    ctx.restore();
-    // Hands meet the actual work surface. The human writes or points, the AI highlights.
-    const hx=134+turn*16,hy=167-turn*12;
-    stroke([[92,142],[105,160],[hx-8,hy]],'#365f67',10);
-    ellipse(hx-2,hy,7,4.4,'#e0ab85');stroke([[hx,hy-1],[hx+10,hy-7]],'#283e50',2.6);
-    const rx=259-ai*16,ry=166-ai*12;
-    stroke([[291,143],[280,158],[rx,ry]],'#8098b1',10);
-    stroke([[290,142],[279,156],[rx,ry-1]],'#e4edf3',6);ellipse(280,157,4,4,'#7390a8');
-    ellipse(rx,ry,5.5,4,'#f6fcff');
-    // The active speaker owns the bubble and the tail points towards their face.
-    const anchor=human?79:310;
-    box(54,20,282,40,13,'#ffffffed');
-    ctx.fillStyle='#ffffffed';ctx.beginPath();ctx.moveTo(anchor-6,59);ctx.lineTo(anchor+8,59);ctx.lineTo(anchor,70);ctx.closePath();ctx.fill();
-    label(buttons[index][beat].dataset.line,195,40,16,'#203847');
-    label(scene.dataset.role,73,222,14,'#2a4754');label('AI 助手',310,222,14,'#2a4754');
+    shot(stills[lower],1);
+    if (upper!==lower) shot(stills[upper],blend);
+    const [r,g,b]=tones[lower].map((c,i)=>Math.round(c+(tones[upper][i]-c)*blend));
+    // Reflected light travels along the glass desk to the colleague taking over.
+    const cx=390*x,cy=195*y;
+    const glow=ctx.createRadialGradient(cx,cy,1,cx,cy,43);
+    glow.addColorStop(0,'rgba('+[r,g,b]+',.35)');glow.addColorStop(.34,'rgba('+[r,g,b]+',.13)');glow.addColorStop(1,'transparent');
+    ctx.fillStyle=glow;ctx.fillRect(cx-43,cy-43,86,86);
+    const strip=ctx.createLinearGradient(0,0,390,0);
+    strip.addColorStop(0,'#0b1b2e');strip.addColorStop(1,'#203b54');
+    ctx.fillStyle=strip;ctx.fillRect(0,195,390,47);
+    ctx.fillStyle='rgb('+[r,g,b]+')';ctx.fillRect(15,205,2,26);
+    ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.font='600 12px system-ui,sans-serif';ctx.fillText(action.dataset.role+'  ·  '+scene.dataset.document,25,207);
+    ctx.fillStyle='#fff';ctx.font='600 15px system-ui,sans-serif';ctx.fillText(action.dataset.line,25,227);
   }
+  for(const image of stills) image.addEventListener('load',schedule);
+  const loadNearby=new IntersectionObserver(([entry])=>{
+    if(!entry.isIntersecting) return;
+    stills.forEach(image=>{image.loading='eager';});
+    loadNearby.disconnect();
+  },{rootMargin:'440px 0px'});
+  loadNearby.observe(viewport);
   function setBeat(index,n,now) {
     beat=n;stepAt=now;
     buttons[index].forEach((button,i)=>button.setAttribute('aria-pressed',String(i===n)));
@@ -183,6 +163,38 @@
       track.scrollTo({left:i*track.clientWidth,behavior:reduced.matches?'instant':'smooth'});
     }
   }));
+  // Lock only horizontal drags. Vertical gestures stay with the page.
+  let drag=null;
+  track.addEventListener('pointerdown',event=>{
+    if (!phone.matches || !event.isPrimary || event.button!==0) return;
+    drag={id:event.pointerId,x:event.clientX,y:event.clientY,left:track.scrollLeft,active:false};
+  });
+  track.addEventListener('pointermove',event=>{
+    if (!drag || drag.id!==event.pointerId) return;
+    const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
+    if (!drag.active) {
+      if (Math.max(Math.abs(dx),Math.abs(dy))<7) return;
+      if (Math.abs(dy)>=Math.abs(dx)) {drag=null;return;}
+      drag.active=true;
+      track.classList.add('turning');
+      track.setPointerCapture(event.pointerId);
+    }
+    track.scrollLeft=drag.left-dx;
+  });
+  function finishDrag(event) {
+    if (!drag || drag.id!==event.pointerId) return;
+    const gesture=drag;
+    drag=null;
+    if (!gesture.active) return;
+    const delta=track.scrollLeft-gesture.left;
+    const from=Math.round(gesture.left/track.clientWidth);
+    const step=event.type==='pointercancel' || Math.abs(delta)<track.clientWidth*.14 ? 0 : Math.sign(delta);
+    const to=Math.max(0,Math.min(pages.length-1,from+step));
+    track.classList.remove('turning');
+    track.scrollTo({left:to*track.clientWidth,behavior:reduced.matches?'instant':'smooth'});
+  }
+  track.addEventListener('pointerup',finishDrag);
+  track.addEventListener('pointercancel',finishDrag);
   track.addEventListener('scroll',schedule,{passive:true});
   window.addEventListener('scroll',()=>{if(nearSeam) schedule();},{passive:true});
   new IntersectionObserver(([entry])=>{nearSeam=entry.isIntersecting;schedule();},

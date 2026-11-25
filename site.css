@@ -774,10 +774,11 @@
 @media(max-width:680px) {
   .deliver-bench.folio .deliver-pages {
     position:relative; display:flex; align-items:stretch; overflow:auto hidden;
-    scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none;
+    scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; touch-action:pan-y pinch-zoom;
     border:1px solid #c9d4c9; border-radius:5px 14px 9px 5px;
     background:#e7ece4; box-shadow:0 3px #f9faf3,0 4px #bbc8bd,0 7px #f4f7ed,0 8px #c7d2c5;
   }
+  .deliver-bench.folio .deliver-pages.turning { scroll-snap-type:none; user-select:none; }
   .deliver-pages::-webkit-scrollbar { display:none; }
   .deliver-bench.folio .deliver-view {
     display:grid; flex:0 0 100%; min-width:0; grid-template-rows:auto 1fr; align-items:start;
@@ -831,3 +832,40 @@
 .collab-actions button { min-height:44px; border-radius:6px; padding:4px 9px; color:#345460; background:transparent; font-size:clamp(12px,3vw,14px); }
 .collab-actions button[aria-pressed="true"] { background:#fff; color:#164f53; box-shadow:0 1px 4px #20475032; font-weight:650; }
 @media(max-width:680px){.collab-canvas {border-radius:15px 15px 0 0;}}
+
+.delivery-intro { max-width:38em; color:#38505d; font-size:clamp(16px,1.6vw,21px); line-height:1.65; margin:0 0 20px; }
+.deliver-bench > label { background:linear-gradient(#f4f8fc,#e6eef5); border:1px solid #c5d1db; border-radius:8px 8px 0 0; color:#3b5368; }
+.deliver-bench input:checked + label { background:#25475c; color:white; border-color:#25475c; }
+.deliver-paper { background:linear-gradient(125deg,#c4d6dd,#ecf1f2 58%,#c6d4e3); }
+@media(max-width:680px){
+  .deliver-bench > label { width:calc((100% - 8px)/3); margin:0 4px 0 0; padding:6px 4px; font-size:clamp(12px,3.2vw,15px); min-height:48px; text-align:center; }
+  .deliver-bench > label:last-of-type { margin-right:0; }
+  .deliver-bench.folio .deliver-pages { border-top-left-radius:0; border-top-right-radius:0; }
+  .delivery-intro { margin-bottom:14px; }
+}
+
+/* Each dossier opens with the two digital colleagues responsible for it. */
+.deliver-team { grid-column:1/-1; display:flex; gap:1px; overflow:hidden; background:#28455b; color:#f7fbff; }
+.crew-member { flex:1; display:flex; align-items:center; gap:12px; background:linear-gradient(110deg,#0a1b31,#193446); min-width:0; padding:7px 12px; }
+.crew-member img { width:57px; height:57px; object-fit:cover; object-position:center 48%; border-radius:12px; }
+.crew-member span { display:grid; font-size:12px; color:#c1d9e6; }
+.crew-member b { color:#fff; font-size:15px; }
+@media(max-width:680px){.crew-member { gap:6px; padding:7px; }.crew-member img { width:44px; height:48px; }.deliver-bench.folio .deliver-view { grid-template-rows:auto auto 1fr; }}
+/* A filmstrip shares the same room across the five service stages. */
+.collab-scene { background:#0d1f35; }
+.scene-still { display:block; width:100%; height:auto; aspect-ratio:2; object-fit:cover; }
+.with-desk .scene-still { display:none; }
+.collab-scene figcaption { color:#e4edff; }
+.collab-actions { background:linear-gradient(100deg,#101e33,#1e3451); padding:6px; gap:5px; }
+.collab-actions button { flex:1; color:#d0deed; }
+.collab-actions button[aria-pressed="true"] { background:linear-gradient(105deg,#d9fff3,#c9dcff); color:#15344c; }
+.fde-process .fde-stage-deck li { border-color:#263851; background:#142841; }
+.fde-process .fde-stage-copy { background:linear-gradient(130deg,#14253a,#152f45); border-color:#39546a; }
+.fde-process .fde-stage-copy h3 { color:#f7f9fb; }
+.fde-process .fde-stage-copy p { color:#d2dfea; }
+.fde-process .fde-stage-copy .fde-stage-name,.fde-process .fde-stage-result strong { color:#93dbec; }
+.fde-process .fde-stage-result { border-color:#40566d; }
+@media(max-width:680px){
+  .deliver-bench > label { height:52px; vertical-align:top; line-height:1.35; }
+  .deliver-bench > label span { text-wrap:balance; word-break:keep-all; }
+}
