@@ -38,7 +38,7 @@
       if (motion.matches || progress===1) {
         ctx.drawImage(image,0,0,w,h);
       } else {
-        // Anchor both edges of the scene while the active employee leans into the task.
+        // Anchor both edges of the scene while the selected teammate dips toward the shared document.
         const slices=64,iw=image.naturalWidth,ih=image.naturalHeight;
         const activeX=[.22,.53,.83][beat],pulse=Math.sin(progress*Math.PI);
         for(let k=0;k<slices;k++) {
