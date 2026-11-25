@@ -402,26 +402,34 @@ function installRack(rack) {
   const status = rack.querySelector('.rack-announcement');
   let current = 0;
 
-  function select(index) {
-    current = (index + pieces.length) % pieces.length;
+  const showcase = rack.classList.contains('studio-rack');
+  function positionHangers(center) {
+    const count = pieces.length;
     pieces.forEach((piece, i) => {
-      let offset = (i - current + pieces.length) % pieces.length;
-      if (offset > pieces.length / 2) offset -= pieces.length;
+      const offset = ((i - center + count * 2.5) % count + count) % count - count / 2;
       const depth = Math.abs(offset);
+      const first = Math.min(1, depth);
+      const stack = 1 - Math.exp(-Math.max(0, depth - 1) / (showcase ? 2.2 : 3.1));
+      const distance = (showcase ? 34 : 25) * first + (showcase ? 24 : 28) * stack;
+      const angle = (showcase ? 64 : 54) * first + (showcase ? 14 : 19) * (1 - Math.exp(-depth / 3));
       const direction = Math.sign(offset);
-      // Open a space around the selected garment; pack the others along the rail.
-      const distance = depth ? 25 + 28 * (1 - Math.exp(-(depth - 1) / 3.1)) : 0;
-      const angle = depth ? 54 + 19 * (1 - Math.exp(-depth / 3)) : 0;
       piece.style.setProperty('--pos', (50 + direction * distance) + '%');
       piece.style.setProperty('--angle', (-direction * angle) + 'deg');
-      piece.style.setProperty('--size', depth ? .87 - .012 * depth : 1);
+      piece.style.setProperty('--size', 1 - first * .13 - .012 * depth);
       piece.style.setProperty('--tone', Math.max(.78, 1 - depth * .04));
-      piece.style.zIndex = pieces.length - depth;
+      piece.style.zIndex = Math.round((count - depth) * 100);
+    });
+  }
+  function select(index) {
+    current = ((index % pieces.length) + pieces.length) % pieces.length;
+    positionHangers(current);
+    pieces.forEach((piece, i) => {
+      const side = i !== current;
       const open = piece.querySelector('button');
       const name = piece.querySelector('img').alt;
-      open.tabIndex = depth ? -1 : 0;
-      open.setAttribute('aria-label', depth ? '选择' + name : '放大查看' + name);
-      if (depth) open.removeAttribute('aria-haspopup');
+      open.tabIndex = side ? -1 : 0;
+      open.setAttribute('aria-label', side ? '选择' + name : '放大查看' + name);
+      if (side) open.removeAttribute('aria-haspopup');
       else open.setAttribute('aria-haspopup','dialog');
     });
     status.textContent = pieces[current].querySelector('img').alt;
@@ -434,10 +442,12 @@ function installRack(rack) {
     suppressClickUntil = 0;
     start = [e.clientX, e.clientY];
   });
+  function dragStep() { return Math.max(86, Math.min(160, room.clientWidth * .30)); }
   function releaseDrag() {
     start = null;
     room.classList.remove('dragging');
     room.style.removeProperty('--drag');
+    if (showcase) positionHangers(current);
   }
   room.addEventListener('pointermove', e => {
     if (!start || !e.isPrimary) return;
@@ -445,7 +455,8 @@ function installRack(rack) {
     if (Math.abs(dx) < 7 || Math.abs(dx) < Math.abs(e.clientY - start[1])) return;
     room.classList.add('dragging');
     room.setPointerCapture(e.pointerId);
-    room.style.setProperty('--drag', Math.max(-48, Math.min(48, dx * .38)) + 'px');
+    if (showcase) positionHangers(current - dx / dragStep());
+    else room.style.setProperty('--drag', Math.max(-48, Math.min(48, dx * .38)) + 'px');
   });
   room.addEventListener('dragstart', e => e.preventDefault());
   room.addEventListener('pointercancel', releaseDrag);
@@ -454,7 +465,8 @@ function installRack(rack) {
     const dx = e.clientX - start[0], dy = e.clientY - start[1];
     releaseDrag();
     if (Math.abs(dx) > 35 && Math.abs(dx) > 1.5 * Math.abs(dy)) {
-      select(current + (dx < 0 ? 1 : -1));
+      const steps = showcase ? Math.max(1, Math.round(Math.abs(dx) / dragStep())) : 1;
+      select(current - Math.sign(dx) * steps);
       suppressClickUntil = performance.now() + 350;
     }
   });

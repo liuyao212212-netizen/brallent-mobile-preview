@@ -510,10 +510,17 @@
 
 .studio-rack { position:relative; isolation:isolate; overflow:hidden; border-radius:8px;
   background:radial-gradient(ellipse at 50% 24%,#fbfaf6 5%,#dce4e5 64%,#b5c3c8); }
-.studio-rack .rack-room { height:clamp(240px,28vw,370px); }
+.studio-rack .rack-room { height:clamp(365px,36vw,510px); }
+.studio-rack.rack-ready .rack-piece { top:5%; width:78%; height:90%; }
+.studio-rack .rack-bar { top:5.4%; }
+.studio-rack .dragging .rack-piece { transition:none; }
+@media(max-width:680px) {
+  .studio-rack .rack-room { height:clamp(324px,101vw,465px); }
+  .studio-rack.rack-ready .rack-piece { width:81%; }
+}
 .studio-rack .rack-piece img { object-fit:contain; }
 .studio-rack .rack-controls { position:absolute; inset:0; margin:0; justify-content:space-between; align-items:center; pointer-events:none; }
-.studio-rack .rack-controls button { width:38px; height:48px; border:0; border-radius:5px; background:transparent;
+.studio-rack .rack-controls button { width:44px; height:48px; border:0; border-radius:5px; background:transparent;
   color:#21363d; text-shadow:0 0 3px #fff; pointer-events:auto; }
 .studio-rack .rack-controls button:focus-visible { outline-offset:-3px; }
 .studio-rack .rack-controls button:hover { background:#ffffff70; }
