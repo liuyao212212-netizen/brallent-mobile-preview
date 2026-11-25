@@ -419,7 +419,11 @@ function installRack(rack) {
   controls.querySelector('.rack-prev').onclick = () => select(current - 1);
   controls.querySelector('.rack-next').onclick = () => select(current + 1);
   let start, suppressClickUntil = 0;
-  room.addEventListener('pointerdown', e => { if (e.isPrimary) start = [e.clientX, e.clientY]; });
+  room.addEventListener('pointerdown', e => {
+    if (!e.isPrimary) return;
+    suppressClickUntil = 0;
+    start = [e.clientX, e.clientY];
+  });
   function releaseDrag() {
     start = null;
     room.classList.remove('dragging');
