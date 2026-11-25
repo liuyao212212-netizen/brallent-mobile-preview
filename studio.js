@@ -283,7 +283,7 @@ function reviewModel(ctx,p) {
 async function startAtrium(stage) {
   const art=stage.querySelector('img');
   const plate=new Image();
-  plate.src=innerWidth<=680?'assets/atrium-table-mobile.webp':'assets/atrium-table.webp';
+  plate.src=innerWidth<=680?'assets/atrium-table-mobile.webp?v=b493c9800d64fb1c':'assets/atrium-table.webp?v=2be7ee070ebe2474';
   try { await Promise.all([art.decode(),plate.decode()]); } catch { return; }
   const canvas=stage.querySelector('.characters'),light=stage.querySelector('.table-light');
   const brush=light.getContext('2d'),reduce=matchMedia('(prefers-reduced-motion: reduce)');

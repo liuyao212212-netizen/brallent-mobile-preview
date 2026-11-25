@@ -124,7 +124,7 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 function installEntrances() {
   if (!('IntersectionObserver' in window) || reducedMotion.matches) return;
   const selector = [
-    '.section .wrap > h2', '.blocks > article', '.solutions > a', '.process > li',
+    '.section .wrap > h2', '.blocks > article', '.sector-tile', '.sector-flow > li', '.process > li',
     '.case-strip > a', '.casegrid > a', '.gallery > figure', '.service-catalog > article',
     '.reader > h2', '.reader > p', '.form-layout > div', '.form-layout > form'
   ].join(',');
