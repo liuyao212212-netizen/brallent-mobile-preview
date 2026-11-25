@@ -593,8 +593,8 @@ document.querySelectorAll('.scene-switch').forEach(control => {
 function installCaseJournal(journal) {
   const track = journal.querySelector('.journal-track');
   const cards = [...track.children];
-  const strip = journal.querySelector('.journal-choices');
-  const choices = [...strip.children];
+  const picker = journal.closest('.fde-highlights').querySelector('.case-picker');
+  const select = picker.querySelector('select');
   let current = -1;
   let frame = 0;
 
@@ -604,34 +604,24 @@ function installCaseJournal(journal) {
     if (!stride) return;
     const position = Math.max(0, Math.min(cards.length - 1, track.scrollLeft / stride));
     const nearest = Math.round(position);
-    journal.style.setProperty('--playhead', (100 * position / (cards.length - 1)) + '%');
-    for (let i = 0; i < cards.length; i++) {
+    cards.forEach((card,i) => {
       const offset = Math.max(-1, Math.min(1, i - position));
-      const distance = Math.abs(offset);
-      const style = cards[i].style;
-      style.setProperty('--turn', -8 * offset + 'deg');
-      style.setProperty('--zoom', 1 - .055 * distance);
-      style.setProperty('--clarity', 1 - .34 * distance);
-      style.setProperty('--shift', -4 * offset + '%');
-      style.setProperty('--light', (46 - 54 * offset) + '%');
-      style.setProperty('--sweep', 1.1 * Math.sin(distance * Math.PI));
-    }
+      card.style.setProperty('--drift', (offset * 22) + '%');
+      card.style.setProperty('--ribbon', (-offset * 15) + '%');
+    });
     if (nearest === current) return;
     current = nearest;
-    choices.forEach((b,i) => b.setAttribute('aria-pressed', String(i === current)));
+    select.value = String(current);
     cards.forEach((c,i) => c.classList.toggle('settled',i === current));
-    const tab = choices[current].getBoundingClientRect();
-    const bar = strip.getBoundingClientRect();
-    strip.scrollLeft += (tab.left + tab.right - bar.left - bar.right) / 2;
   }
 
   function go(index) {
     const card = cards[Math.max(0, Math.min(cards.length - 1, index))];
     track.scrollTo({left:card.offsetLeft - cards[0].offsetLeft, behavior:reducedMotion.matches ? 'instant' : 'smooth'});
   }
-  choices.forEach((button,i) => button.addEventListener('click', () => go(i)));
+  select.addEventListener('change', () => go(select.selectedIndex));
   track.addEventListener('keydown', event => {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    if (event.target !== track || !['ArrowLeft','ArrowRight'].includes(event.key)) return;
     event.preventDefault();
     track.focus({preventScroll:true});
     go(current + (event.key === 'ArrowRight' ? 1 : -1));
@@ -639,16 +629,7 @@ function installCaseJournal(journal) {
   function schedule() { if (!frame) frame = requestAnimationFrame(render); }
   track.addEventListener('scroll', schedule, {passive:true});
   window.addEventListener('resize', schedule);
-  if ('IntersectionObserver' in window) {
-    const entrance = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) {
-        journal.classList.add('in-view');
-        entrance.disconnect();
-      }
-    }, {threshold:.25});
-    entrance.observe(journal);
-  }
-  strip.hidden = false;
+  picker.hidden = false;
   render();
 }
 document.querySelectorAll('.case-journal').forEach(installCaseJournal);

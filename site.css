@@ -802,37 +802,47 @@
 }
 
 /* Industry index and its selected project cover. */
-/* A continuous contact sheet: the frame, lighting and position marker follow the swipe. */
-.fde-highlights > h3 {margin:0 0 10px}
-.case-journal {--playhead:0%; background:linear-gradient(135deg,#182e42,#071420 66%); color:#fff; border:1px solid #243d54; border-radius:16px; padding:8px 0 15px; overflow:hidden}
-.journal-choices {display:flex; gap:5px; overflow-x:auto; padding:0 15px 6px; scrollbar-width:none}
-.journal-choices button {position:relative; flex:none; min-height:44px; padding:0 8px; font:inherit; font-size:14px; background:transparent; border:0; color:#bccbd5; cursor:pointer}
-.journal-choices button[aria-pressed=true] {color:#c4fff2}
-.journal-choices button[aria-pressed=true]::after {content:""; position:absolute; height:2px; background:#95efdb; bottom:3px; left:8px; right:8px; box-shadow:0 0 7px #69dcca}
-.journal-track {display:flex; position:relative; align-items:start; gap:8px; padding:0 18px; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none}
-.journal-track::-webkit-scrollbar,.journal-choices::-webkit-scrollbar {display:none}
-.journal-track article {flex:0 0 100%; scroll-snap-align:center; min-width:0}
-.journal-cover {position:relative; isolation:isolate; overflow:hidden; display:flex; align-items:end; min-height:clamp(245px,24vw,348px); padding:20px; border-radius:9px; background:#123347; color:white; box-shadow:inset 0 0 0 1px #8ab4be44}
-.journal-cover img,.journal-hr {position:absolute; inset:0; z-index:-2; width:100%; height:100%; object-fit:cover}
-.journal-cover::before {content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(0deg,#051421 0%,#0a1d2dbf 31%,transparent 80%)}
-.journal-sector {position:absolute; top:15px; left:16px; color:#ebfff9; padding:3px 8px; border-left:2px solid #a0f7e0; background:#081d30d9; font-size:13px; line-height:1.6}
-.journal-cover h4 {color:#fff; font-weight:650; font-size:clamp(20px,2.1vw,32px); line-height:1.4; margin:0 0 10px; text-wrap:balance}
-.journal-caption > span {color:#b6f4e5; font-size:14px}
-.journal-hr {padding:64px 20px 0; background:repeating-linear-gradient(0deg,transparent 0 23px,#91c6c119 24px),radial-gradient(ellipse at 83% 5%,#356e78,#0c2538 78%); color:#cefff5}
-.journal-hr b {display:block; font-size:clamp(24px,3vw,38px)}
-.journal-related {display:flex; align-items:center; gap:8px; min-height:44px; color:#deeee9; font-size:13px; padding:5px 1px}
-.journal-related span {color:#a1b4c0}.journal-related i {margin-left:auto}
-.journal-cover i,.journal-related i {font-style:normal}
-.journal-ruler {position:relative; height:8px; margin:11px 22px 0; background:repeating-linear-gradient(90deg,#567283 0 1px,transparent 1px 8px) left center/100% 4px no-repeat}
-.journal-ruler i {position:absolute; left:clamp(0px,var(--playhead),calc(100% - 16px)); width:16px; height:3px; top:2px; border-radius:3px; background:#9cfbe1; box-shadow:0 0 9px #65f4d7}
-.journal-choices[hidden] {display:none}
-.case-journal :focus-visible {outline:2px solid #91efeb; outline-offset:-3px}
+/* The scrollport has exactly one full-width page at each snap point. */
+.exhibit-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;margin-bottom:8px}
+.exhibit-heading h3 {font-size:clamp(19px,2vw,28px);margin:0}
+.case-picker {display:flex;align-items:center;gap:6px;font-size:13px;color:#475976}
+.case-picker select {min-height:44px;max-width:8em;border:1px solid #cdd6e3;border-radius:12px;padding:0 6px;font:inherit;color:#193452;background:#fff}
+.case-picker[hidden] {display:none}
+.case-journal {background:#fff;color:#152b43;border:1px solid #cdd9e7;border-radius:20px;overflow:hidden}
+.journal-track {position:relative;display:flex;gap:0;padding:0;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none}
+.journal-track::-webkit-scrollbar {display:none}
+.journal-track article {flex:0 0 100%;max-width:100%;min-width:0;overflow:hidden;scroll-snap-align:start}
+.sample-stage {position:relative;isolation:isolate;overflow:hidden;display:grid;place-items:center;min-height:225px;padding:20px 12px;background:#172c59}
+.sample-stage > img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3;opacity:.28}
+.sample-stage::before,.sample-stage::after {content:"";position:absolute;inset:-32%;pointer-events:none;z-index:-2}
+.sample-stage::before {background:radial-gradient(ellipse at 23% 72%,#62bbd1aa,transparent 41%),radial-gradient(ellipse at 79% 28%,#926de8ad,transparent 42%)}
+.sample-stage::after {z-index:-1;background:radial-gradient(ellipse at 50% 100%,transparent 49%,#afdeff6b 50%,#937afb55 52%,transparent 60%);transform:rotate(-17deg)}
+.sample-desk {width:min(92%,340px);position:relative;display:flex;flex-wrap:wrap;gap:3px;min-width:0;margin:0;padding:8px;background:#edf4ffeb;border:1px solid #ffffffc9;border-radius:16px;box-shadow:0 12px 28px #091c4138}
+.sample-desk legend {position:absolute;clip-path:inset(50%);width:1px;height:1px;overflow:hidden}
+.sample-desk input {position:absolute;clip-path:inset(50%);width:1px;height:1px}
+.sample-desk label {display:grid;place-items:center;flex:1;min-height:44px;font-size:14px;color:#3a4e68;border-radius:10px;cursor:pointer}
+.sample-desk input:checked + label {background:#fff;color:#263969;box-shadow:0 2px 8px #53658c22;font-weight:650}
+.sample-paper {display:none;flex:0 0 100%;order:1;padding:13px 13px 8px;text-align:left}
+.sample-desk input:checked + label + .sample-paper {display:block}
+.sample-paper strong {display:block;color:#182e52;font-size:clamp(19px,2vw,24px);margin:0 0 7px}
+.sample-paper ul {margin:0;padding:0;list-style:none}
+.sample-paper li {display:flex;align-items:center;gap:9px;font-size:14px;color:#304965;line-height:1.5;padding:5px 0;border-top:1px solid #cad5e3}
+.sample-paper li::before {content:"";width:7px;height:7px;border:1.5px solid #5d7f96;border-radius:50%;flex:none}
+.sample-desk input:nth-of-type(2):checked + label + .sample-paper li:first-child::before {background:#3d9283;border-color:#3d9283}
+.case-description {padding:clamp(18px,2.5vw,28px);text-align:left}
+.case-description p {font-size:13px;letter-spacing:.04em;color:#52637f;margin:0 0 5px}
+.case-description h4 {color:#142e50;line-height:1.35;font-size:clamp(21px,2.4vw,31px);margin:0 0 14px;text-wrap:balance}
+.case-actions {display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px}
+.case-actions a {min-height:44px;display:inline-flex;align-items:center;font-size:14px;text-decoration:none}
+.case-actions .journal-cover {padding:0 17px;border-radius:24px;background:#223857;color:#fff;font-weight:600}
+.case-actions .journal-related {color:#40587c;text-decoration:underline;text-underline-offset:3px}
+.sample-desk input:focus-visible + label,.case-journal :focus-visible,.case-picker select:focus-visible {outline:2px solid #3875b7;outline-offset:-2px}
+@media(max-width:355px){.case-picker > span {display:none}}
 @media(prefers-reduced-motion:no-preference) {
-  .journal-track article .journal-cover {transform:perspective(740px) rotateY(var(--turn,0deg)) scale(var(--zoom,1)); opacity:var(--clarity,1)}
-  .journal-cover img {transform:translateX(var(--shift,0%)) scale(1.09)}
-  .journal-cover::after {content:""; position:absolute; pointer-events:none; top:0; bottom:0; left:var(--light,0%); width:18%; background:linear-gradient(90deg,transparent,#9bffe244,transparent); opacity:var(--sweep,0)}
-  .journal-track .settled .journal-sector {animation:case-lock .42s ease-out}
-  @keyframes case-lock {from {transform:translateX(-5px);box-shadow:-5px 0 12px #a0f7e0}}
+  .sample-stage::before {transform:translateX(var(--drift,0%))}
+  .sample-stage::after {transform:translateX(var(--ribbon,0%)) rotate(-17deg)}
+  .settled .sample-desk input:checked + label + .sample-paper {animation:sample-appear .4s ease-out both}
+  @keyframes sample-appear {from {opacity:.45;transform:translateY(5px)}}
 }
 
 .collab-scene { position:relative; min-width:0; margin:0; align-self:start; background:#eaf1f4; }
@@ -949,18 +959,3 @@
   @keyframes team-arrive {from {opacity:.76;transform:translateY(3px)}}
 }
 .team-overview h2 span {display:inline-block}
-.journal-focus {
-  position:absolute; top:19%; right:13%; width:30%; height:28%; pointer-events:none;
-  --corner:linear-gradient(#b0ffea,#b0ffea);
-  background:var(--corner) top left/10px 1px,var(--corner) top left/1px 10px,
-    var(--corner) top right/10px 1px,var(--corner) top right/1px 10px,
-    var(--corner) bottom left/10px 1px,var(--corner) bottom left/1px 10px,
-    var(--corner) bottom right/10px 1px,var(--corner) bottom right/1px 10px;
-  background-repeat:no-repeat; opacity:.55
-}
-@media(prefers-reduced-motion:no-preference) {
-  .in-view .settled .journal-focus {animation:journal-focus-in .75s ease-out both}
-  .in-view .settled .journal-focus::after {content:""; position:absolute; inset:0 0 auto; height:1px; background:linear-gradient(90deg,transparent,#acfce6,transparent); box-shadow:0 0 8px #71ffe3; animation:journal-scan .85s ease-in-out both}
-  @keyframes journal-focus-in {0% {transform:scale(1.32);opacity:0} 50% {opacity:.95} 100% {transform:scale(1);opacity:.55}}
-  @keyframes journal-scan {0% {top:0;opacity:0} 25% {opacity:1} 100% {top:100%;opacity:0}}
-}
