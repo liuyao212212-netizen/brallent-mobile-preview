@@ -892,3 +892,49 @@
   .deliver-bench .deliver-note { padding:16px 18px 18px; }
 }
 @media(prefers-reduced-motion:no-preference){ .folio .outcome-art { transform:perspective(850px) rotateY(calc(var(--page-angle,0deg) * .3)) scale(1.015); } }
+
+/* A task is the entry point to the digital team. Each choice opens its own work sample. */
+.fde-shortcuts {display:flex; flex-wrap:wrap; gap:8px 24px}
+.team-overview {background:#f2f5fa; margin:0}
+.team-overview .wrap {max-width:1024px}
+.team-overview h2 {text-align:left; text-wrap:balance; margin-bottom:12px}
+.team-lead {color:#43546b; max-width:48em; margin:0 0 25px; line-height:1.75}
+.team-tasks {display:flex; flex-wrap:wrap; gap:6px; margin:0; padding:0; min-width:0; border:0}
+.team-tasks legend {font-weight:650; padding:0; margin-bottom:10px; font-size:15px}
+.team-tasks > input {position:absolute; width:1px; height:1px; clip-path:inset(50%)}
+.team-tasks > label {padding:9px 16px; display:grid; place-items:center; min-height:44px; border-radius:30px; cursor:pointer; color:#314459; background:white; border:1px solid #c2d0dd; font-size:15px}
+.team-tasks input:checked + label {background:#13384b; border-color:#13384b; color:white}
+.team-tasks input:focus-visible + label {outline:3px solid #4272c9; outline-offset:2px}
+.team-desk {order:1; display:none; flex:0 0 100%; background:white; border:1px solid #d4dfec; border-radius:18px; overflow:hidden; margin-top:8px}
+.team-tasks input:checked + label + article {display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); align-items:center}
+.team-desk > img {width:100%; height:100%; min-height:210px; object-fit:cover}
+.desk-record {padding:clamp(18px,3vw,34px); text-align:left}
+.desk-record > span {color:#416479; font-size:13px}
+.team-overview .desk-record h3 {color:#102e46; font-size:clamp(22px,2.4vw,32px); line-height:1.35; margin:4px 0 8px}
+.desk-record p {color:#3e5064; margin:0; line-height:1.7}
+.desk-record details {margin-top:10px; border-top:1px solid #d5dfe7}
+.desk-record summary,.team-toolbox summary {cursor:pointer; padding:12px 0; color:#174e6a; font-weight:600; min-height:44px}
+.team-toolbox {border-bottom:1px solid #c8d5e1; margin:10px 0 18px}
+.tool-regions {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; padding:4px 0 18px}
+.tool-regions h4 {margin:0 0 8px; color:#425970}
+.tool-regions ul {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); list-style:none; padding:0; gap:6px; margin:0}
+.tool-regions li {display:flex; align-items:center; gap:8px; padding:7px; background:white; border-radius:8px; font-size:14px}
+.tool-regions img {width:29px;height:29px;object-fit:contain}
+.case-directory {background:#f2f6fc; padding:clamp(100px,11vw,165px) 0 clamp(48px,7vw,100px)}
+.case-directory-head {display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; border-bottom:1px solid #c8d5e1; padding-bottom:16px; margin-bottom:22px}
+.case-directory-head h1 {font-size:clamp(34px,5vw,70px); line-height:1.1; margin:0; color:#122940}
+.case-directory-head nav {display:flex; gap:14px}
+.case-directory-head nav a {display:inline-flex; align-items:center; min-height:44px; color:#245872}
+.portfolio > div {min-width:0; scroll-margin-top:90px}
+@media(max-width:680px) {
+  .team-tasks input:checked + label + article {grid-template-columns:minmax(0,1fr)}
+  .team-desk > img {min-height:0; height:auto; aspect-ratio:2/1}
+  .team-tasks > label {flex:1; padding-inline:4px; font-size:14px}
+  .tool-regions {grid-template-columns:minmax(0,1fr)}
+  .case-directory-head {display:block}.case-directory-head nav {margin-top:8px}
+}
+@media(prefers-reduced-motion:no-preference) {
+  .team-tasks input:checked + label + .team-desk > img {animation:team-arrive .45s ease-out both}
+  @keyframes team-arrive {from {opacity:.76;transform:translateY(3px)}}
+}
+.team-overview h2 span {display:inline-block}
